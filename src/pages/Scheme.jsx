@@ -7,7 +7,7 @@ import SchemeOperationModal from "../components/SchemeOperationModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPen, faTrash } from "@fortawesome/free-solid-svg-icons";
 import TableSkeleton from "../components/TableSkeleton";
-import {ServicesAuthContext} from "../contexts/ServicesAuthContext"
+import { ServicesAuthContext } from "../contexts/ServicesAuthContext";
 const Scheme = () => {
   const { isModelOpen, setIsModelOpen } = useContext(SchemeContext);
 
@@ -29,17 +29,20 @@ const Scheme = () => {
   const [value, setValue] = useState(null);
 
   const columns = [
+    { label: "Sr.No", key: "srno" },
     { label: "Action", key: "action" },
-    { label: "ID", key: "id" },
+    { label: "Scheme ID", key: "scheme_id" },
     { label: "Name", key: "name" },
-    { label: "Commission Type", key: "commission_type" },
-    { label: "Type", key: "type" },
+    // { label: "Commission Type", key: "commission_type" },
+    // { label: "Type", key: "type" },
     { label: "Commission Value", key: "commission_value" },
     { label: "Status", key: "status" },
-    { label: "GST Type", key: "gst_type" },
+    // { label: "GST Type", key: "gst_type" },
     { label: "GST Value", key: "gst_value" },
-    { label: "Created At", key: "created_at" },
-    { label: "Updated At", key: "updated_at" },
+    { label: "Merchents", key: "user_names_json" },
+    { label: "Billers", key: "blr_names_json" },
+    { label: "Date", key: "created_at" },
+    { label: "Update Date", key: "updated_at" },
   ];
 
   const tstyle = {
@@ -61,16 +64,57 @@ const Scheme = () => {
   //  Build table rows when response updates
   useEffect(() => {
     if (response?.data) {
-      const withActionButton = response.data.map((d) => {
-        const { created_at, updated_at, status, ...rest } = d; // remove status
+      console.log("THis is ajfafjkfjlksajdfjlk", response);
+
+      const withActionButton = response.data.map((d, index) => {
+        const {
+          // srno:`${index+1}`,
+          created_at,
+          updated_at,
+          status,
+          commission_value,
+          gst_value,
+          type,
+          gst_type,
+          user_names_json,
+          blr_names_json,
+          ...rest
+        } = d; // remove status
+
+        let userInfo = "No User was added";
+        if (user_names_json) {
+          console.log("enter level one");
+
+          try {
+            let a = JSON.parse(user_names_json);
+            userInfo = a.map((u, index) => u);
+          } catch (err) {
+            console.error("ERROR THIS IS  FROM 86 Line", err);
+          }
+        }
+
+        let billerInfo = "No Biller was added";
+        if (blr_names_json) {
+          try {
+             billerInfo = JSON.parse(blr_names_json);
+            // billerInfo = a.map((b) => b);
+            // console.log(billerInfo);
+          } catch (err) {
+            console.error(err);
+          }
+        }
 
         return {
           ...rest,
-          // created_at,
+          srno: index + 1,
+          commission_value:
+            type === "percent"
+              ? `${commission_value}%`
+              : `${commission_value}₹`,
+          gst_value: gst_type === "percent" ? `${gst_value}%` : `${gst_value}₹`,
           created_at: created_at
             ? new Date(created_at).toLocaleString()
             : "None",
-
           updated_at: updated_at
             ? new Date(updated_at).toLocaleString()
             : "None",
@@ -84,7 +128,24 @@ const Scheme = () => {
                 Active
               </span>
             ),
-
+          user_names_json: user_names_json ? (
+            <span>
+              {userInfo.map((u, index) => (
+                <div key={index}>{u}</div>
+              ))}
+            </span>
+          ) : (
+            <span>{userInfo}</span> // Fallback in case `user_names_json` is not present
+          ),
+          blr_names_json: blr_names_json ? (
+            <span>
+              {billerInfo.map((b, index) => (
+                <div key={index}>{b}</div>
+              ))}
+            </span>
+          ) : (
+            <span>{billerInfo}</span> // Fallback in case `user_names_json` is not present
+          ),
           action: (
             <span className="flex items-center gap-2">
               <button
@@ -100,7 +161,7 @@ const Scheme = () => {
 
               <button
                 onClick={() => {
-                  setValue(d.id);
+                  setValue(d.scheme_id);
                   setOperation(3);
                   setIsModelOpen(true);
                 }}

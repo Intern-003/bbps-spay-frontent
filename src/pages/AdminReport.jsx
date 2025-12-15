@@ -130,21 +130,31 @@ const AdminReport = () => {
   };
 
   const exportPDF = () => {
-    if (!data.length) return alert("No data to export.");
-    const doc = new jsPDF();
+    if (!data.length) {
+      alert("No data to export.");
+      return;
+    }
 
+    const doc = new jsPDF("l", "mm", "a4"); // landscape for wide tables
+
+    // Title
+    doc.setFontSize(16);
+    doc.text("Admin Report", 14, 15);
+
+    // Table headers
     const tableColumn = [
-      { label: "Sr. No.", key: "sr_no" },
-      { label: "Request Id", key: "request_id" },
-      { label: "Customer Name", key: "customer_name" },
-      { label: "Category", key: "category" },
-      { label: "Bill Number", key: "bill_number" },
-      { label: "Amount", key: "amount" },
-      { label: "Plan", key: "plan" },
-      { label: "Status", key: "status" },
-      { label: "Date", key: "date" },
+      "Sr. No.",
+      "Request ID",
+      "Customer Name",
+      "Category",
+      "Bill Number",
+      "Amount",
+      // "Plan",
+      "Status",
+      "Date",
     ];
 
+    // Table rows
     const tableRows = data.map((item, index) => [
       index + 1,
       item.RequestId,
@@ -156,7 +166,42 @@ const AdminReport = () => {
       item.Status,
       item.Date,
     ]);
-    autoTable(doc, { head: [tableColumn], body: tableRows });
+
+    autoTable(doc, {
+      startY: 25,
+      head: [tableColumn],
+      body: tableRows,
+
+      // Table styling
+      theme: "grid",
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+        halign: "center",
+        valign: "middle",
+      },
+      headStyles: {
+        fillColor: [22, 160, 133], // green header
+        textColor: 255,
+        fontStyle: "bold",
+      },
+      bodyStyles: {
+        textColor: 50,
+      },
+
+      // Column widths
+      columnStyles: {
+        0: { cellWidth: 15 }, // Sr No
+        1: { cellWidth: 35 }, // Request ID
+        2: { cellWidth: 40 }, // Customer Name
+        3: { cellWidth: 30 },
+        4: { cellWidth: 30 },
+        5: { cellWidth: 25 },
+        6: { cellWidth: 25 },
+        7: { cellWidth: 30 },
+      },
+    });
+
     doc.save("Admin_Report.pdf");
   };
 
