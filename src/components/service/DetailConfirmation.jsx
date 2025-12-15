@@ -38,10 +38,10 @@ const DetailConfirmation = () => {
       setResError(msg);
     }
 
-    // if (error?.message) {
-    //   setResError(error.message || "Something went wrong");
-    //   console.log("API Error (hook):", error);
-    // }
+    if (error?.message) {
+      setResError(error.message || "Something went wrong");
+      console.log("API Error (hook):", error);
+    }
   }, [error]);
   useEffect(()=>{
      setIsDisplay(true);

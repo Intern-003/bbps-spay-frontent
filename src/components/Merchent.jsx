@@ -11,16 +11,16 @@ import { useCookies } from "react-cookie";
 import { useGet } from "../hooks/useGet";
 
 const Merchent = () => {
-   
+
 
 
   const navigate = useNavigate();
   const [cookie] = useCookies();
   const userId = cookie.user.id;
 
-const { data: merchantsData } = useGet(`/reports/user/${userId}`);
+  const { data: merchantsData } = useGet(`/reports/user/${userId}`);
 
-console.log("Merchants Data:", merchantsData);
+  console.log("Merchants Data:", merchantsData);
 
 
   const handelServiceClick = () => {
@@ -32,41 +32,62 @@ console.log("Merchants Data:", merchantsData);
     alert(`Copied: ${text}`);
   };
   const renderStatusLabel = (status) => {
-  const normalized = status?.toLowerCase(); // normalize
-  
-  const base =
-    "inline-block px-3 py-1 text-sm font-semibold rounded-full shadow-sm w-20 text-center";
-  
-  const styles = {
-    success: "bg-green-100 text-green-700",
-    failed: "bg-red-100 text-red-700",
-    pending: "bg-yellow-100 text-yellow-700",
-    initiated: "bg-blue-100 text-blue-700",
+    const normalized = status?.toLowerCase(); // normalize
+
+    const base =
+      "inline-block px-3 py-1 text-sm font-semibold rounded-full shadow-sm w-20 text-center";
+
+    const styles = {
+      success: "bg-green-100 text-green-700",
+      failed: "bg-red-100 text-red-700",
+      pending: "bg-yellow-100 text-yellow-700",
+      initiated: "bg-blue-100 text-blue-700",
+    };
+
+    return (
+      <span className={`${base} ${styles[normalized] || "bg-gray-100 text-gray-700"}`}>
+        {status}
+      </span>
+    );
   };
+  const dateFormat = (dateTime) => {
+    const dateObj = new Date(dateTime.replace(" ", "T"));
 
-  return (
-    <span className={`${base} ${styles[normalized] || "bg-gray-100 text-gray-700"}`}>
-      {status}
-    </span>
-  );
-};
+    const formatted =
+      dateObj.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }) +
+      " | " +
+      dateObj.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+    return (formatted)
+  }
+  // const dateTime = "2025-12-02 10:57:27";
 
 
- const tData =
-  merchantsData?.data?.map((item) => ({
-    id: item.id,
-    user_name: item.user_name,
-    request_id: item.spay_txn_id || "-",
-    category: item.product_type,
-    mobile_no: item.mobile,
-    respAmount: item.amount,
-    txnStatus: item.status,
-    responseReason: item.description,
-    payout_opening_balance: item.payout_opening_balance,
-    payout_closing_balance: item.payout_closing_balance,
-    payment_mode: item.payment_mode,
-    created_at: item.created_at,
-  })) || [];
+  // console.log(formatted);
+
+
+  const tData =
+    merchantsData?.data?.map((item) => ({
+      id: item.id,
+      user_name: item.user_name,
+      request_id: item.spay_txn_id || "-",
+      category: item.product_type,
+      mobile_no: item.mobile,
+      respAmount: item.amount,
+      txnStatus: item.status,
+      responseReason: item.description,
+      payout_opening_balance: item.payout_opening_balance,
+      payout_closing_balance: item.payout_closing_balance,
+      payment_mode: item.payment_mode,
+      created_at: item.created_at,
+    })) || [];
 
 
   const tColumns = [
@@ -76,17 +97,20 @@ console.log("Merchants Data:", merchantsData);
     { label: "Category", key: "category" },
     { label: "Mobile Number", key: "mobile_no" },
     { label: "Amount", key: "respAmount" },
-   {
-    label: "Status",
-    key: "txnStatus",
-    render: (item) => renderStatusLabel(item.txnStatus),
-  },
+    {
+      label: "Status",
+      key: "txnStatus",
+      render: (item) => renderStatusLabel(item.txnStatus),
+    },
 
-    { label: "Date", key: "created_at" },
+    {
+      label: "Date", key: "created_at",
+      render: (item) =>dateFormat(item.created_at)
+     },
 
     // {label:"NONE",key:"trikj"}
   ];
-console.log(cookie.user);
+  console.log(cookie.user);
 
   return (
     <span>
@@ -207,7 +231,7 @@ console.log(cookie.user);
           columns={tColumns}
           data={tData}
           currentPage={1}
-            tableClass="min-w-full border border-gray-400 text-sm text-gray-700 font-sans overflow-x-auto"
+          tableClass="min-w-full border border-gray-400 text-sm text-gray-700 font-sans overflow-x-auto"
           headerClass="bg-blue-600 text-white font-semibold text-left uppercase border-b border-gray-400"
           rowClass="bg-white hover:bg-blue-100 border-b border-gray-300 transition-colors duration-200"
           cellClass="py-3 px-4 text-gray-700 whitespace-nowrap"

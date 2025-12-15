@@ -16,7 +16,7 @@ const Table = ({
   paginationActiveClass = "",
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-console.log("from Table",data);
+console.log("from Table ",data);
 
   const totalPages = Math.ceil(data.length / rowsPerPage) || 1;
   // console.log(totalPages);
