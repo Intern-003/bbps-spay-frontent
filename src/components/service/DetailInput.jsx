@@ -29,9 +29,11 @@ const DetailInput = () => {
   // const [disable,setDisable]=useState();
   const [billerFetchRequiremet, setBillerFetchRequiremet] = useState(false);
   const [resError, setResError] = useState();
-  const { error, execute: fetchResponse } = usePost(
-    `/bbps/bill-process${testEnv}/json`
-  );
+  const {
+    loading,
+    error,
+    execute: fetchResponse,
+  } = usePost(`/bbps/bill-process${testEnv}/json`);
 
   /* -------------------------------------------------------
      LOAD selectedBiller PARAMS
@@ -47,7 +49,7 @@ const DetailInput = () => {
       console.log(msg);
       setResError(msg);
     }
-    if (error?.result?.decryptedResponse) {
+    if (error?.result?.decryptedResponse?.errorInfo) {
       setResError(
         error?.result?.decryptedResponse.errorInfo.error[0].errorMessage
       ); // sync UI error
@@ -55,6 +57,10 @@ const DetailInput = () => {
         "line 45",
         error?.result?.decryptedResponse.errorInfo.error[0].errorMessage
       );
+    }
+
+    if (error?.result.decryptedResponse.complianceReason) {
+      setResError(error?.result.decryptedResponse.complianceReason);
     }
   }, [error]);
 
@@ -86,7 +92,15 @@ const DetailInput = () => {
       [key]: value,
     }));
   };
+/*--------------------------------------------
+    CANCLE HANDELING
+--------------------------------------------*/
 
+  const handleCancel=(close)=>{
+    window.location.reload(true);
+    close();
+    console.log("Cancle Page");
+  }
   /* -------------------------------------------------------
      SUBMIT REQUEST
   ------------------------------------------------------- */
@@ -185,7 +199,14 @@ const DetailInput = () => {
 
       return (
         <div key={index} className="mb-3 flex flex-col">
-          <label className="font-semibold mb-1">{item.paramName}</label>
+          <label className="font-semibold mb-1">
+            {item.paramName}
+            {item.isOptional === "false" ? (
+              <span className="text-red-500"> *</span>
+            ) : (
+              <span></span>
+            )}
+          </label>
 
           {hasDropdown ? (
             <select
@@ -295,7 +316,7 @@ const DetailInput = () => {
                 <div className="mt-2 space-y-2">{mandatoryInputs()}</div>
               )}
 
-              <div className="text-red-500 text-sm mt-1">
+              <div className="text-red-500 text-md mt-1">
                 {resError && <>{resError}</>}
               </div>
             </>
@@ -310,11 +331,11 @@ const DetailInput = () => {
             onClick={() => handleSubmit(close)}
             className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm"
           >
-            Submit
+            {loading ? "Loading..." : "Submit"}
           </button>
 
           <button
-            onClick={close}
+            onClick={()=>handleCancel(close)}
             className="px-3 py-1.5 bg-gray-300 rounded hover:bg-gray-400 text-sm"
           >
             Cancel

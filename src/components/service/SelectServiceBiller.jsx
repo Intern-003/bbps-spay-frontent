@@ -5,36 +5,36 @@ import placeholderImg from "../../images/Spaylogo.jpg";
 import { useGet } from "../../hooks/useGet";
 import { usePost } from "../../hooks/usePost";
 import { useServicesContext } from "../../contexts/ServicesAuthContext";
+import Select from "react-select";
 
 const SelectServiceBiller = () => {
   const { forWhat } = useServicesContext();
   const { isModalOpen, getModalData, openModal, closeModal } = useModal();
 
-  const testEnv = useMemo(() => {
-    console.log("this is ", forWhat);
-    return forWhat;
-  }, [forWhat]);
-  // console.log(testEnv);
+  const testEnv = useMemo(() => forWhat, [forWhat]);
 
   const [selectedBillerId, setSelectedBillerId] = useState("");
   const [selectedBillerData, setSelectedBillerData] = useState(null);
   const [serviceList, setServiceList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [dropdownOpen, setDropdownOpen] = useState(false); // <-- NEW
 
   const isOpen = isModalOpen("serviceSelecter");
   const { service } = getModalData("serviceSelecter") || {};
 
   const endpoint = useMemo(() => {
     return service?.label ? `/get-billers${testEnv}/${service.label}` : null;
-  }, [service?.label]);
+  }, [service?.label, testEnv]);
 
   const { data, loading: apiLoading } = useGet(endpoint);
 
   const { data: billerResponse, execute: fetchBillerInfo } = usePost(
     `/bbps/biller-info${testEnv}/json`
   );
-
+const handleCancel=(close)=>{
+    window.location.reload(true);
+    close();
+    console.log("Cancle Page");
+  }
   useEffect(() => {
     if (apiLoading) {
       setLoading(true);
@@ -77,15 +77,22 @@ const SelectServiceBiller = () => {
 
   const onChangeHandler = async (id) => {
     setSelectedBillerId(id);
-    setDropdownOpen(false);
 
     const res = await fetchBillerInfo(id);
-    const result = res.data.biller;
+    const result = res.data?.biller;
 
     if (Array.isArray(result) && result[0]) {
       setSelectedBillerData(result[0]);
     }
   };
+
+  //  Convert API data → react-select options
+  const billerOptions = useMemo(() => {
+    return serviceList.map((item) => ({
+      value: item.blr_id,
+      label: item.blr_name,
+    }));
+  }, [serviceList]);
 
   return (
     <ServicesModalWrapper
@@ -101,52 +108,21 @@ const SelectServiceBiller = () => {
         </>
       }
       renderMiddle={
-        data && data.length > 0 ? (
-          <div className="relative w-full mt-3">
-            {/* Selected box */}
-            <div
-              onClick={() => !loading && setDropdownOpen(!dropdownOpen)}
-              className="border p-3 rounded bg-white w-full flex justify-between items-center cursor-pointer text-sm"
-            >
-              <span className="truncate w-[90%]">
-                {selectedBillerId
-                  ? serviceList.find((x) => x.blr_id === selectedBillerId)
-                      ?.blr_name
-                  : loading
-                  ? "Loading..."
-                  : "Select Biller"}
-              </span>
-              <span>▼</span>
-            </div>
-
-            {/* Dropdown list */}
-            {dropdownOpen && (
-              <div
-                className="
-                  absolute top-full left-0 mt-1 
-                  w-full 
-                  max-h-48 
-                  overflow-y-auto 
-                  bg-white border rounded shadow-lg z-50
-                "
-              >
-                {serviceList.map((item) => (
-                  <div
-                    key={item.blr_id}
-                    onClick={() => onChangeHandler(item.blr_id)}
-                    className="
-                      p-3 text-sm 
-                      hover:bg-blue-100 
-                      cursor-pointer 
-                      break-words
-                    "
-                  >
-                    {item.blr_name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        billerOptions.length > 0 ? (
+          <Select
+            options={billerOptions}
+            isLoading={loading}
+            placeholder="Select Biller"
+            onChange={(option) => option && onChangeHandler(option.value)}
+            value={
+              billerOptions.find((opt) => opt.value === selectedBillerId) ||
+              null
+            }
+            isClearable
+            className="text-sm"
+            classNamePrefix="react-select"
+            menuPlacement="auto"
+          />
         ) : (
           <div>No Biller Available</div>
         )
@@ -165,9 +141,9 @@ const SelectServiceBiller = () => {
             Next
           </button>
 
-          <button
-            onClick={close}
-            className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+        <button
+            onClick={()=>handleCancel(close)}
+            className="px-3 py-1.5 bg-gray-300 rounded hover:bg-gray-400 text-sm"
           >
             Cancel
           </button>

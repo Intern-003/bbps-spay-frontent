@@ -20,7 +20,6 @@ const PlanDisplay = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [response, setResponse] = useState(null);
 
-
   useEffect(() => {
     const fetchPlans = async () => {
       if (!selectedBiller.billerId) return;
@@ -58,7 +57,11 @@ const PlanDisplay = () => {
   }, 150); // small delay ensures modal context updates
 };
 
-
+const handleCancel=(close)=>{
+    window.location.reload(true);
+    close();
+    console.log("Cancle Page");
+  }
   const handleNext = (close) => {
     if (!selectedPlan) {
       alert("Please select a plan first.");
@@ -127,10 +130,10 @@ console.log(selectedBiller);
       renderFooter={(close) => (
         <>
           <button
-            onClick={close}
-            className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+            onClick={()=>handleCancel(close)}
+            className="px-3 py-1.5 bg-gray-300 rounded hover:bg-gray-400 text-sm"
           >
-            Close
+            Cancel
           </button>
 
           <button
