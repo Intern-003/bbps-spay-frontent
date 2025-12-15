@@ -22,32 +22,32 @@ const DetailConfirmation = () => {
   const [userDataRequire, setUserDataRequire] = useState(false);
   const [formValues, setFormValues] = useState({ amount: "" });
   const [userData, setUserData] = useState({});
-  const [isDisplay,setIsDisplay]=useState(false);
-  const { error, execute: fetchPayment } = usePost(
-    `/bbps/bill-payment${testEnv}/json`
-  );
+  const [isDisplay, setIsDisplay] = useState(false);
+  const {
+    error,
+    loading,
+    execute: fetchPayment,
+  } = usePost(`/bbps/bill-payment${testEnv}/json`);
   const [resError, setResError] = useState();
-
+  // const loading = true;
   /* ---------------- LOAD RESPONSE FIELDS ---------------- */
   useEffect(() => {
     if (error?.errors) {
       let a = error?.errors;
       let msg = Object.values(a)[0][0];
       console.log("ERROR HANDELING ", a);
-     
       setResError(msg);
     }
-
     if (error?.message) {
       setResError(error.message || "Something went wrong");
       console.log("API Error (hook):", error);
     }
   }, [error]);
-  useEffect(()=>{
-     setIsDisplay(true);
-     setTimeout(()=>(setIsDisplay(false)),[3000])
-  },[resError])
 
+  useEffect(() => {
+    setIsDisplay(true);
+    setTimeout(() => setIsDisplay(false), [3000]);
+  }, [resError]);
 
   useEffect(() => {
     if (!selectedBiller) return;
@@ -101,9 +101,13 @@ const DetailConfirmation = () => {
     paymentMode: "Cash",
     splitPay: "N",
     quickPay: "N",
-    ...(acceptAmount ? { amount: formValues.amount } : {}),
+    ...(acceptAmount ? { amount: formValues.amount * 100 } : {}),
   };
-
+  const handleCancel = (close) => {
+    window.location.reload(true);
+    close();
+    console.log("Cancle Page");
+  };
   /* ---------------- EXECUTE PAYMENT ---------------- */
   const handlePay = async () => {
     console.log("🔥 Final Payment Payload:", finalMergedData);
@@ -180,7 +184,9 @@ const DetailConfirmation = () => {
           )}
 
           {/* Show API Error */}
-          {isDisplay && resError && <div className="text-red-500 mt-2">{resError}</div>}
+          {isDisplay && resError && (
+            <div className="text-red-500 mt-2">{resError}</div>
+          )}
 
           {/* User Required Input Fields */}
           <div className="mt-5 bg-gray-50 p-4 rounded-lg shadow-sm border">
@@ -288,16 +294,17 @@ const DetailConfirmation = () => {
       renderFooter={(close) => (
         <div className="flex justify-center gap-3 mt-4">
           <button
+            disabled={loading}
             onClick={handlePay}
             className="px-6 py-2 bg-green-600 text-white rounded"
           >
-            Pay
+            {loading ? "Processing..." : "Pay"}
           </button>
           <button
-            onClick={close}
-            className="px-6 py-2 bg-gray-400 text-white rounded"
+            onClick={() => handleCancel(close)}
+            className="px-3 py-1.5 bg-gray-300 rounded hover:bg-gray-400 text-sm"
           >
-            Close
+            Cancel
           </button>
         </div>
       )}

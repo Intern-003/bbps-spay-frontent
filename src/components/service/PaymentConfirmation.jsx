@@ -1,74 +1,58 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useRef, useMemo } from "react";
 import { ServicesModalWrapper } from "../ServicesModalWrapper";
 import { useModal } from "../../contexts/ServicesModalContext";
-import placeholderImg from "../../images/Spaylogo.jpg";
 import { useServicesContext } from "../../contexts/ServicesAuthContext";
+
 const PaymentConfirmation = () => {
   const { isModalOpen, getModalData, closeModal } = useModal();
-  const { lastModal, serviceId } = getModalData("lastModal") || {};
+  const { lastModal } = getModalData("lastModal") || {};
   const isOpen = isModalOpen("lastModal");
-  const {forWhat}=useServicesContext();
+
+  const { forWhat } = useServicesContext();
   const printRef = useRef();
-    const testEnv=useMemo(()=>{
-      return forWhat
-    },[forWhat]);
-    const [flat,setFlat]=useState({});
 
   /* ---------------- FORMAT RESPONSE ---------------- */
-  const formatResponse = (data) => {
-    if (!data?.response) return [];
+  const tableData = useMemo(() => {
+    if (!lastModal?.response) return [];
 
-    const resp = data.response;
-    // console.log(resp);
+    const resp = lastModal.response;
+    let flat = {};
 
-    if (resp.responseReason!=="FAILURE") {
-    setFlat( {
-      ResponseCode: resp.responseCode,
-      ResponseReason: resp.responseReason,
-      TransactionRefId: resp.txnRefId,
-      TransactionType: resp.txnRespType,
-
-      // Convert paise amount → rupees
-      Amount: resp.respAmount ? Number(resp.respAmount) / 100 : "",
-
-      BillDate: resp.respBillDate,
-      CustomerName: resp.respCustomerName,
-      DueDate: resp.respDueDate,
-
-      ApprovalRefNumber: resp.approvalRefNumber,
-      RequestId: resp.requestId,
-    });
-   
-    }else{
-       setFlat({
-      ResponseCode: resp.responseCode,
-      ResponseReason: resp.responseReason,
-      errorMesssaage:resp.vErrorRootVO.error[0].errorMessage
-
-      })
+    if (resp.responseReason !== "FAILURE") {
+      flat = {
+        "Response Code": resp.responseCode,
+        "Response Reason": resp.responseReason,
+        "Transaction Ref Id": resp.txnRefId,
+        "Transaction Type": resp.txnRespType,
+        "Amount (₹)": resp.respAmount
+          ? `₹ ${(Number(resp.respAmount) / 100).toLocaleString("en-IN")}`
+          : "",
+        "Bill Date": resp.respBillDate,
+        "Customer Name": resp.respCustomerName,
+        "Due Date": resp.respDueDate,
+        "Approval Ref Number": resp.approvalRefNumber,
+      };
+    } else {
+      flat = {
+        "Response Code": resp.responseCode,
+        "Response Reason": resp.responseReason,
+        "Error Message":
+          resp?.vErrorRootVO?.error?.[0]?.errorMessage || "Transaction Failed",
+      };
     }
-   
-    // Add input params safely
-    const inputParams =
-      resp.inputParams?.input?.map((i) => ({
-        [i.paramName]: i.paramValue
-      })) || [];
 
-    // Merge all input params
-    inputParams.forEach((obj) => {
-      const key = Object.keys(obj)[0];
-      flat[key] = obj[key];
+    // 🔹 Add dynamic input params
+    resp.inputParams?.input?.forEach((item) => {
+      flat[item.paramName] = item.paramValue;
     });
 
     return Object.entries(flat).map(([key, value]) => ({
       key,
       value,
     }));
-  };
+  }, [lastModal]);
 
-  const tableData = formatResponse(lastModal);
-
-  // Split into 2-column rows
+  /* ---------------- SPLIT INTO 2-COLUMN ROWS ---------------- */
   const rows = [];
   for (let i = 0; i < tableData.length; i += 2) {
     rows.push(tableData.slice(i, i + 2));
@@ -77,15 +61,17 @@ const PaymentConfirmation = () => {
   /* ---------------- PRINT HANDLER ---------------- */
   const handlePrint = () => {
     const printContent = printRef.current;
-    const newWindow = window.open("", "", "width=800,height=600");
+    const newWindow = window.open("", "", "width=900,height=650");
+
     newWindow.document.write(`
       <html>
         <head>
-          <title>Print Transaction</title>
+          <title>Transaction Receipt</title>
           <style>
+            body { font-family: Arial, sans-serif; }
             table { border-collapse: collapse; width: 100%; }
-            td, th { border: 1px solid #000; padding: 8px; }
-            td.font-semibold { font-weight: bold; }
+            td { border: 1px solid #000; padding: 8px; }
+            td.label { font-weight: bold; width: 25%; }
           </style>
         </head>
         <body>
@@ -93,6 +79,7 @@ const PaymentConfirmation = () => {
         </body>
       </html>
     `);
+
     newWindow.document.close();
     newWindow.focus();
     newWindow.print();
@@ -105,28 +92,26 @@ const PaymentConfirmation = () => {
       onClose={() => closeModal("lastModal")}
       headerBg="bg-white"
       headerTextColor="text-green-600"
-      renderHeader={<span className="font-semibold text-lg">Transaction Successful</span>}
+      renderHeader={
+        <span className="font-semibold text-lg">Transaction Successful</span>
+      }
       renderMiddle={
         <div ref={printRef}>
-          <table className="w-full text-[15px] border border-gray-200 border-collapse">
+          <table className="w-full text-sm border border-gray-300">
             <tbody>
               {rows.map((row, idx) => (
-                <tr key={idx} className="border border-gray-200">
+                <tr key={idx}>
                   {row.map((item, i) => (
                     <React.Fragment key={i}>
-                      <td className="border p-1 font-semibold w-1/4">
-                        {item.key}
-                      </td>
-                      <td className="border p-1 w-1/4">
-                        {item.value}
-                      </td>
+                      <td className="label border p-2">{item.key}</td>
+                      <td className="border p-2">{item.value}</td>
                     </React.Fragment>
                   ))}
 
                   {row.length === 1 && (
                     <>
-                      <td className="border p-1 w-1/4">&nbsp;</td>
-                      <td className="border p-1 w-1/4">&nbsp;</td>
+                      <td className="border p-2">&nbsp;</td>
+                      <td className="border p-2">&nbsp;</td>
                     </>
                   )}
                 </tr>
@@ -135,7 +120,7 @@ const PaymentConfirmation = () => {
           </table>
         </div>
       }
-      renderFooter={(close) => (
+      renderFooter={() => (
         <>
           <button
             onClick={handlePrint}
@@ -143,9 +128,7 @@ const PaymentConfirmation = () => {
           >
             Print
           </button>
-          <button
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
+          <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
             Email
           </button>
         </>

@@ -65,6 +65,25 @@ const Admin = () => {
     );
   };
 
+
+  /*to format date  */
+const dateFormat = (dateTime) => {
+    const dateObj = new Date(dateTime.replace(" ", "T"));
+
+    const formatted =
+      dateObj.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }) +
+      " | " +
+      dateObj.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+    return (formatted)
+  }
   /* ---------------------- Transaction Column Objects ---------------------- */
   const tColumns = [
     { label: "ID", key: "id" },
@@ -96,8 +115,8 @@ const Admin = () => {
       respAmount: item.amount,
       txnStatus: item.status,
       responseReason: item.description,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
+      Date: item.created_at,
+      "updated date": item.updated_at,
     })) || [];
 
   /* ---------------------- Chart Data ---------------------- */
@@ -186,7 +205,7 @@ const Admin = () => {
                 columns={userColumns}
                 data={userRows}
                 currentPage={1}
-                rowsPerPage={5}
+                rowsPerPage={10}
                 isPaginationRequired={true}
               />
             )}
