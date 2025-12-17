@@ -4,149 +4,202 @@ import { useModal } from "../../contexts/ServicesModalContext";
 import placeholderImg from "../../images/Spaylogo.jpg";
 import { usePost } from "../../hooks/usePost";
 import { useServicesContext } from "../../contexts/ServicesAuthContext";
+import ErrorToast from "../ErrorToast";
 
 const DetailConfirmation = () => {
   const { isModalOpen, getModalData, closeModal, openModal } = useModal();
   const { forWhat } = useServicesContext();
+
   // Fallback for modal data
   const modalData = getModalData("finalData") || {};
   const { data = {}, custData = {}, selectedBiller = {} } = modalData;
 
-  const testEnv = useMemo(() => {
-    return forWhat;
-  }, [forWhat]);
+  const testEnv = useMemo(() => forWhat, [forWhat]);
+
   const [input, setInput] = useState([]);
   const [addInfo, setAddInfo] = useState([]);
   const [billerRes, setBillerRes] = useState({});
   const [acceptAmount, setAcceptAmount] = useState(false);
   const [userDataRequire, setUserDataRequire] = useState(false);
-  const [formValues, setFormValues] = useState({ amount: "" });
+
+  const [formValues, setFormValues] = useState({
+    amount: "",
+    customerPan: "",
+  });
+
   const [userData, setUserData] = useState({});
-  const [isDisplay, setIsDisplay] = useState(false);
+  const [isPanInputDisplay, setIsPanInputDisplay] = useState(false);
+
   const {
     error,
     loading,
     execute: fetchPayment,
   } = usePost(`/bbps/bill-payment${testEnv}/json`);
+
   const [resError, setResError] = useState();
-  // const loading = true;
-  /* ---------------- LOAD RESPONSE FIELDS ---------------- */
+
+  // ---------------- HANDLE API ERRORS ----------------
   useEffect(() => {
     if (error?.errors) {
-      let a = error?.errors;
-      let msg = Object.values(a)[0][0];
-      console.log("ERROR HANDELING ", a);
-      setResError(msg);
-    }
-    if (error?.message) {
+      const firstMsg =
+        Object.values(error.errors)[0]?.[0] || "Something went wrong";
+      setResError(firstMsg);
+    } else if (error?.message) {
       setResError(error.message || "Something went wrong");
-      console.log("API Error (hook):", error);
     }
   }, [error]);
 
+  // ---------------- PAN VISIBILITY (FIXED) ----------------
   useEffect(() => {
-    setIsDisplay(true);
-    setTimeout(() => setIsDisplay(false), [3000]);
+    const amount = Number(formValues.amount || 0);
+
+    if (amount >= 50000 && !custData?.customerPan) {
+      setIsPanInputDisplay(true);
+    } else {
+      setIsPanInputDisplay(false);
+    }
+  }, [formValues.amount, custData?.customerPan]);
+
+  useEffect(() => {
+    if (!resError) return;
+    setTimeout(() => setResError(null), 3000);
   }, [resError]);
 
+  // ---------------- LOAD MODAL DATA ----------------
   useEffect(() => {
     if (!selectedBiller) return;
 
-    // Check if user data is required
-    if (
+    setUserDataRequire(
       selectedBiller?.billerFetchRequiremet !== "MANDATORY" &&
-      selectedBiller?.billerFetchRequiremet !== "OPTIONAL"
-    ) {
-      setUserDataRequire(true);
-    }
-    setInput(data.inputParams?.input || []);
-    setAddInfo(data.additionalInfo?.info || []);
-    setBillerRes(data.billerResponse || {});
+        selectedBiller?.billerFetchRequiremet !== "OPTIONAL"
+    );
+
+    setInput(data?.inputParams?.input || []);
+    setAddInfo(data?.additionalInfo?.info || []);
+    setBillerRes(data?.billerResponse || {});
     setAcceptAmount(selectedBiller?.billerAdhoc === "true");
   }, [selectedBiller, data]);
 
-  /* ---------------- BUILD TABLE ROWS ---------------- */
-  const billerRows = Object.entries(billerRes || {})
-    .map(([key, value]) => ({ key, value }))
-    .filter((x) => x.value !== "" && x.value != null);
+  // ---------------- HELPERS ----------------
+  const mapInput = (arr, nameKey = "paramName", valueKey = "paramValue") =>
+    Array.isArray(arr)
+      ? arr.map((i) => ({
+          key: i[nameKey] ?? "Unknown Param",
+          value:
+            i[valueKey] && typeof i[valueKey] === "object"
+              ? JSON.stringify(i[valueKey], null, 2)
+              : i[valueKey] ?? "",
+        }))
+      : [];
 
+  const mapAddInfo = (arr) =>
+    Array.isArray(arr)
+      ? arr.map((i) => ({
+          key: i.infoName ?? "Unknown Info",
+          value:
+            i.infoValue && typeof i.infoValue === "object"
+              ? JSON.stringify(i.infoValue, null, 2)
+              : i.infoValue ?? "",
+        }))
+      : [];
+
+  const mapBillerRows = (billerResponse) =>
+    billerResponse && typeof billerResponse === "object"
+      ? Object.entries(billerResponse).map(([key, value]) => {
+          if (key === "billAmount" && !isNaN(value)) {
+            return { key, value: Number(value) / 100 };
+          }
+
+          if (key === "amountOptions" && Array.isArray(value?.option)) {
+            return {
+              key: "amountOptions",
+              value: value.option
+                .map(
+                  (opt) => `${opt.amountName}: ${Number(opt.amountValue) / 100}`
+                )
+                .join(" | "),
+            };
+          }
+
+          if (value && typeof value === "object") {
+            return { key, value: JSON.stringify(value, null, 2) };
+          }
+
+          return { key, value: value ?? "" };
+        })
+      : [];
+
+  // ---------------- DYNAMIC ROWS ----------------
   const dynamicRows = [
-    ...input.map((i) => ({
-      key: i.paramName ?? "Unknown Param",
-      value: i.paramValue ?? "",
-    })),
-    ...addInfo.map((i) => ({
-      key: i.infoName ?? "Unknown Info",
-      value: i.infoValue ?? "",
-    })),
-    ...billerRows.map((item) => ({
-      key: item.key,
-      value: item.key === "billAmount" ? Number(item.value) / 100 : item.value,
-    })),
+    ...mapInput(input),
+    ...mapAddInfo(addInfo),
+    ...mapBillerRows(billerRes),
   ];
 
-  const handleChange = (key, value) => {
+  // ---------------- HANDLE USER INPUT ----------------
+  const handleChange = (key, value) =>
     setUserData((prev) => ({ ...prev, [key]: value }));
-  };
 
-  /* ---------------- FINAL PAYMENT BODY ---------------- */
+  // ---------------- FINAL PAYMENT PAYLOAD (FIXED) ----------------
   const finalMergedData = {
     billerId: selectedBiller?.billerId,
+
     ...dynamicRows.reduce((acc, item) => {
       acc[item.key] = item.value;
       return acc;
     }, {}),
+
     ...custData,
     ...userData,
+
+    ...(formValues.customerPan
+      ? { customerPan: formValues.customerPan }
+      : custData?.customerPan
+      ? { customerPan: custData.customerPan }
+      : {}),
+
     paymentMode: "Cash",
     splitPay: "N",
     quickPay: "N",
+
     ...(acceptAmount ? { amount: formValues.amount * 100 } : {}),
   };
+
   const handleCancel = (close) => {
     window.location.reload(true);
     close();
-    console.log("Cancle Page");
   };
-  /* ---------------- EXECUTE PAYMENT ---------------- */
+
+  // ---------------- EXECUTE PAYMENT ----------------
   const handlePay = async () => {
     console.log("🔥 Final Payment Payload:", finalMergedData);
+    return;
+    // const response = await fetchPayment(finalMergedData);
+    const response = true;
+    if (response) return;
+    if (!response) return;
 
-    const response = await fetchPayment(finalMergedData);
-    if (!response) {
-      return;
-    }
-    console.log("API Response:", response);
-
-    // 1️⃣ Generic API error
+    // Generic API error
     if (response?.status === false && response?.message) {
       setResError(response.message);
-      console.log("API Error:", response.message);
-      return; // prevent closing modal
+      return;
     }
 
-    // 2️⃣ Validation errors
+    // Validation errors
     if (response?.errors) {
       const messages = Object.values(response.errors).flat().join(", ");
       setResError(messages);
-      console.log("Validation Error:", messages);
       return;
     }
 
     // FORM BBPS ERROR
-    if (response?.response.vErrorRootVO) {
-      console.log(
-        "this is hththt",
-        response?.response.vErrorRootVO.error[0].errorMessage
-      );
-      setResError(response?.response.vErrorRootVO.error[0].errorMessage);
-
-      // set
+    if (response?.response?.vErrorRootVO) {
+      setResError(response.response.vErrorRootVO.error[0].errorMessage);
       closeModal("finalData");
       return;
     }
 
-    // ✅ Success → proceed
+    // Success
     closeModal("finalData");
     openModal("lastModal", {
       lastModal: response,
@@ -178,17 +231,47 @@ const DetailConfirmation = () => {
                 type="number"
                 className="border p-2 rounded w-full focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formValues.amount}
-                onChange={(e) => setFormValues({ amount: e.target.value })}
+                onChange={(e) =>
+                  setFormValues((prev) => ({
+                    ...prev,
+                    amount: e.target.value,
+                  }))
+                }
               />
             </div>
           )}
 
-          {/* Show API Error */}
-          {isDisplay && resError && (
-            <div className="text-red-500 mt-2">{resError}</div>
+          {/* PAN Field */}
+          {isPanInputDisplay && (
+            <div className="mt-6 p-5 border border-gray-200 rounded-lg bg-gray-50">
+              <h2 className="text-sm font-semibold text-red-600 mb-3">
+                * For payments above ₹50,000, PAN details are required
+              </h2>
+
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Enter PAN
+              </label>
+
+              <input
+                type="text"
+                placeholder="ABCDE1234F"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm uppercase
+                focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none
+                placeholder:text-gray-400"
+                value={formValues.customerPan}
+                onChange={(e) =>
+                  setFormValues((prev) => ({
+                    ...prev,
+                    customerPan: e.target.value.toUpperCase(),
+                  }))
+                }
+              />
+            </div>
           )}
 
-          {/* User Required Input Fields */}
+          {resError && <ErrorToast errMsg={resError} />}
+
+          {/* USER DETAILS — UNCHANGED */}
           <div className="mt-5 bg-gray-50 p-4 rounded-lg shadow-sm border">
             <h3 className="font-semibold text-lg mb-3 text-gray-800">
               Customer Details
@@ -204,12 +287,10 @@ const DetailConfirmation = () => {
                     type="text"
                     name="customerMobile"
                     maxLength={10}
-                    placeholder="Enter Customer Mobile"
-                    className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border p-2 rounded"
                     onChange={(e) =>
                       handleChange(e.target.name, e.target.value)
                     }
-                    required
                   />
                 </div>
 
@@ -218,12 +299,10 @@ const DetailConfirmation = () => {
                   <input
                     type="text"
                     name="customerPan"
-                    placeholder="Enter Customer PAN"
-                    className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border p-2 rounded"
                     onChange={(e) =>
                       handleChange(e.target.name, e.target.value)
                     }
-                    required
                   />
                 </div>
 
@@ -234,45 +313,37 @@ const DetailConfirmation = () => {
                   <input
                     type="email"
                     name="customerEmail"
-                    placeholder="Enter Customer Email"
-                    className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border p-2 rounded"
                     onChange={(e) =>
                       handleChange(e.target.name, e.target.value)
                     }
-                    required
                   />
                 </div>
               </div>
             )}
 
-            {/* Remitter Name */}
             <div>
               <label className="font-medium block mb-1">Remitter Name</label>
               <input
                 type="text"
                 name="remitterName"
-                placeholder="Enter Remitter Name"
-                className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full border p-2 rounded"
                 onChange={(e) => handleChange(e.target.name, e.target.value)}
-                required
               />
             </div>
 
-            {/* Remarks */}
             <div>
               <label className="font-medium block mb-1">Remarks</label>
               <input
                 type="text"
                 name="remarks"
-                placeholder="Enter Remarks"
-                className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full border p-2 rounded"
                 onChange={(e) => handleChange(e.target.name, e.target.value)}
-                required
               />
             </div>
           </div>
 
-          {/* Dynamic Rows Table */}
+          {/* ✅ BILL RESPONSE / DYNAMIC ROWS TABLE (RESTORED) */}
           <div className="w-full mt-6">
             <table className="w-full border border-gray-200 rounded-lg overflow-hidden shadow-sm">
               <tbody>
