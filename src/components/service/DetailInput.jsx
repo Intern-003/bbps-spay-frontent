@@ -5,6 +5,7 @@ import placeholderImg from "../../images/Spaylogo.jpg";
 import { usePost } from "../../hooks/usePost";
 import { useServicesContext } from "../../contexts/ServicesAuthContext";
 import { useMemo } from "react";
+import ErrorToast from "../ErrorToast";
 
 const DetailInput = () => {
   const { isModalOpen, getModalData, openModal, closeModal } = useModal();
@@ -28,19 +29,28 @@ const DetailInput = () => {
   const [custPan, setCustPan] = useState("");
   // const [disable,setDisable]=useState();
   const [billerFetchRequiremet, setBillerFetchRequiremet] = useState(false);
-  const [resError, setResError] = useState();
+  const [resError, setResError] = useState(null);
   const {
     loading,
     error,
     execute: fetchResponse,
   } = usePost(`/bbps/bill-process${testEnv}/json`);
 
+  useEffect(() => {
+    if (!resError) return;
+    setTimeout(() => setResError(null), 3000);
+  }, [resError]);
+
   /* -------------------------------------------------------
      LOAD selectedBiller PARAMS
   ------------------------------------------------------- */
   useEffect(() => {
-    if (error?.result.message) {
+    // console.log("Error this is :",error);
+
+    if (error?.result?.message) {
+      // console.log("Direct error",error?.result?.message);
       setResError(error.result.message);
+      return;
     }
 
     if (error?.result?.errors) {
@@ -48,19 +58,23 @@ const DetailInput = () => {
       let msg = Object.values(a)[0][0];
       console.log(msg);
       setResError(msg);
+      return;
     }
     if (error?.result?.decryptedResponse?.errorInfo) {
       setResError(
         error?.result?.decryptedResponse.errorInfo.error[0].errorMessage
       ); // sync UI error
-      console.log(
-        "line 45",
-        error?.result?.decryptedResponse.errorInfo.error[0].errorMessage
-      );
+      // console.log(
+      // "line 45",
+      // error?.result?.decryptedResponse.errorInfo.error[0].errorMessage
+      // );
+      return;
     }
 
-    if (error?.result.decryptedResponse.complianceReason) {
+    if (error?.result?.decryptedResponse?.complianceReason) {
+      // console.log(error?.result.decryptedResponse.complianceReason);
       setResError(error?.result.decryptedResponse.complianceReason);
+      return;
     }
   }, [error]);
 
@@ -92,15 +106,15 @@ const DetailInput = () => {
       [key]: value,
     }));
   };
-/*--------------------------------------------
+  /*--------------------------------------------
     CANCLE HANDELING
 --------------------------------------------*/
 
-  const handleCancel=(close)=>{
+  const handleCancel = (close) => {
     window.location.reload(true);
     close();
     console.log("Cancle Page");
-  }
+  };
   /* -------------------------------------------------------
      SUBMIT REQUEST
   ------------------------------------------------------- */
@@ -257,7 +271,7 @@ const DetailInput = () => {
       </div>
 
       <div className="flex flex-col mb-3">
-        <label className="font-semibold mb-1">Customer Mobile</label>
+        <label className="font-semibold mb-1">Customer Mobile <span className="text-red-500"> *</span></label>
         <input
           type="text"
           className="border p-2 rounded"
@@ -268,7 +282,7 @@ const DetailInput = () => {
       </div>
 
       <div className="flex flex-col mb-3">
-        <label className="font-semibold mb-1">Customer PAN</label>
+        <label className="font-semibold mb-1">Customer PAN </label>
         <input
           type="text"
           className="border p-2 rounded"
@@ -306,25 +320,28 @@ const DetailInput = () => {
           </span>
         </>
       }
-      renderMiddle={
-        <>
-          {selectedBiller ? (
-            <>
-              <div className="space-y-2"> {inputMapper()} </div>
+renderMiddle={
+  <>
+    {selectedBiller ? (
+      <>
+        <div className="space-y-2">
+          {inputMapper()}
+        </div>
 
-              {billerFetchRequiremet && (
-                <div className="mt-2 space-y-2">{mandatoryInputs()}</div>
-              )}
+        {billerFetchRequiremet && (
+          <div className="mt-2 space-y-2">
+            {mandatoryInputs()}
+          </div>
+        )}
 
-              <div className="text-red-500 text-md mt-1">
-                {resError && <>{resError}</>}
-              </div>
-            </>
-          ) : (
-            <p className="text-sm">Loading...</p>
-          )}
-        </>
-      }
+        {resError && <ErrorToast errMsg={resError} />}
+      </>
+    ) : (
+      <p className="text-sm">Loading...</p>
+    )}
+  </>
+}
+
       renderFooter={(close) => (
         <div className="flex justify-end space-x-2 mt-2">
           <button
@@ -335,7 +352,7 @@ const DetailInput = () => {
           </button>
 
           <button
-            onClick={()=>handleCancel(close)}
+            onClick={() => handleCancel(close)}
             className="px-3 py-1.5 bg-gray-300 rounded hover:bg-gray-400 text-sm"
           >
             Cancel
