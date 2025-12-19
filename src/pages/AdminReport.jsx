@@ -17,7 +17,8 @@ const AdminReport = () => {
     status: "",
     billNumber: "",
   });
-  const [rawData, setRawData] = useState([]); // ✅ Keep original data
+
+  const [rawData, setRawData] = useState([]);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const rowsPerPage = 5;
@@ -26,43 +27,41 @@ const AdminReport = () => {
     execute: fetchPayments,
     data: apiResponse,
     isLoading: apiLoading,
-  } = usePost(`/bbps/all-bill-payments-test/json`);
+  } = usePost(`/bbps/all-bill-payments/json`);
 
   useEffect(() => {
     setLoading(true);
     fetchPayments();
   }, []);
 
-  // Map API response to table data
+  /* ---------------- MAP API DATA ---------------- */
   useEffect(() => {
     if (apiResponse) {
       const mappedData = apiResponse.map((item, index) => ({
         SrNo: index + 1,
-        userName: item.u_name || "-",
-        RequestId: item.request_id || item.txnRefID || "N/A",
+        userId: item.user_id || "-",
         CustomerName: item.mobile_no || "N/A",
         Category: item.category || "-",
         BillNumber: item.txnRefID || item.request_id || "-",
-        Amount: Number(item.respAmount) || 0,
-        Status: item.responseReason || "Pending", // ✅ keep as string
+        Status: item.txnStatus === "000" ? "Successful" : "Failed",
         Date: item.created_at
           ? new Date(item.created_at).toLocaleDateString("en-GB")
           : "-",
       }));
-      setRawData(mappedData); // store original
+
+      setRawData(mappedData);
       setData(mappedData);
       setLoading(false);
     }
   }, [apiResponse]);
 
+  /* ---------------- TABLE COLUMNS ---------------- */
   const columns = [
     { label: "Sr No", key: "SrNo" },
-    { label: "User Name", key: "userName" },
-    { label: "Request ID", key: "RequestId" },
+    { label: "User Id", key: "userId" },
     { label: "Customer", key: "CustomerName" },
     { label: "Category", key: "Category" },
     { label: "Transaction ID", key: "BillNumber" },
-    { label: "Amount", key: "Amount" },
     {
       label: "Status",
       key: "Status",
@@ -81,6 +80,7 @@ const AdminReport = () => {
     { label: "Date", key: "Date" },
   ];
 
+  /* ---------------- FILTERS ---------------- */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFilters({ ...filters, [name]: value });
@@ -94,6 +94,7 @@ const AdminReport = () => {
           item.Date !== "-"
             ? new Date(item.Date.split("/").reverse().join("-"))
             : null;
+
         const fromDate = filters.fromDate ? new Date(filters.fromDate) : null;
         const toDate = filters.toDate ? new Date(filters.toDate) : null;
 
@@ -105,6 +106,7 @@ const AdminReport = () => {
           (!filters.billNumber || item.BillNumber.includes(filters.billNumber))
         );
       });
+
       setData(filteredData);
       setLoading(false);
     }, 500);
@@ -118,127 +120,98 @@ const AdminReport = () => {
       status: "",
       billNumber: "",
     });
-    setData(rawData); // ✅ reset to original data
+    setData(rawData);
   };
 
+  /* ---------------- EXPORT EXCEL ---------------- */
   const exportExcel = () => {
     if (!data.length) return alert("No data to export.");
+
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Admin Report");
     XLSX.writeFile(wb, "Admin_Report.xlsx");
   };
 
+  /* ---------------- EXPORT PDF ---------------- */
   const exportPDF = () => {
-    if (!data.length) {
-      alert("No data to export.");
-      return;
-    }
+    if (!data.length) return alert("No data to export.");
 
-    const doc = new jsPDF("l", "mm", "a4"); // landscape for wide tables
+    const doc = new jsPDF("l", "mm", "a4");
 
-    // Title
     doc.setFontSize(16);
-    doc.text("Admin Report", 14, 15);
+    doc.text("Admin Transaction Report", 14, 15);
 
-    // Table headers
-    const tableColumn = [
-      "Sr. No.",
-      "Request ID",
-      "Customer Name",
+    const tableColumns = [
+      "Sr No",
+      "User Id",
+      "Customer",
       "Category",
-      "Bill Number",
-      "Amount",
-      // "Plan",
+      "Transaction ID",
       "Status",
       "Date",
     ];
 
-    // Table rows
-    const tableRows = data.map((item, index) => [
-      index + 1,
-      item.RequestId,
+    const tableRows = data.map((item) => [
+      item.SrNo,
+      item.userId,
       item.CustomerName,
       item.Category,
       item.BillNumber,
-      item.Amount,
-      item.Plan,
       item.Status,
       item.Date,
     ]);
 
     autoTable(doc, {
       startY: 25,
-      head: [tableColumn],
+      head: [tableColumns],
       body: tableRows,
-
-      // Table styling
       theme: "grid",
       styles: {
         fontSize: 9,
         cellPadding: 3,
         halign: "center",
-        valign: "middle",
       },
       headStyles: {
-        fillColor: [22, 160, 133], // green header
+        fillColor: [37, 99, 235],
         textColor: 255,
         fontStyle: "bold",
       },
-      bodyStyles: {
-        textColor: 50,
-      },
-
-      // Column widths
       columnStyles: {
-        0: { cellWidth: 15 }, // Sr No
-        1: { cellWidth: 35 }, // Request ID
-        2: { cellWidth: 40 }, // Customer Name
+        0: { cellWidth: 15 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 40 },
         3: { cellWidth: 30 },
-        4: { cellWidth: 30 },
+        4: { cellWidth: 45 },
         5: { cellWidth: 25 },
-        6: { cellWidth: 25 },
-        7: { cellWidth: 30 },
+        6: { cellWidth: 30 },
       },
     });
 
     doc.save("Admin_Report.pdf");
   };
 
+  /* ---------------- STYLES ---------------- */
   const tableStyles = {
-    tableWrapperClass:
-      "overflow-x-auto rounded-3xl border border-gray-200 bg-white/90 backdrop-blur-xl shadow-xl transition-all duration-300 hover:shadow-2xl",
     tableClass:
-      "min-w-full bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 overflow-hidden text-gray-700",
+      "min-w-full bg-white rounded-2xl shadow-xl border border-gray-200 text-gray-700",
     headerClass:
-      "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-700 text-white text-sm font-semibold uppercase tracking-wide shadow-inner sticky top-0 text-center",
-    rowClass:
-      "bg-white even:bg-gray-50 hover:bg-indigo-50/60 transition-all duration-300 shadow-sm hover:shadow-md rounded-xl mb-2 cursor-pointer",
-    cellClass:
-      "py-3 px-4 text-sm font-medium first:rounded-l-xl last:rounded-r-xl text-center",
-    paginationClass:
-      "bg-blue-50/80 shadow-inner rounded-lg px-4 py-2 text-blue-700 flex items-center justify-center gap-2 mt-4",
-    paginationBtnClass:
-      "flex items-center gap-1 bg-blue-500 text-white px-2.5 py-1.5 rounded-lg shadow-md hover:bg-blue-600 disabled:opacity-40 text-sm transition-all",
-    paginationActiveClass:
-      "px-3 py-1 rounded-full bg-blue-700 text-white shadow-lg text-sm transition-all",
+      "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-700 text-white text-sm font-semibold uppercase text-center",
+    rowClass: "bg-white even:bg-gray-50 hover:bg-indigo-50 transition-all",
+    cellClass: "py-3 px-4 text-sm font-medium text-center",
+    paginationClass: "mt-4 flex justify-center",
   };
 
+  /* ---------------- RENDER ---------------- */
   return (
-    <div className="p-8 min-h-screen bg-gradient-to-br from-teal-50 via-white to-orange-50 transition-all">
-      {/* Header */}
-      <div className="flex flex-wrap justify-between items-center mb-8">
-        <h1 className="text-4xl font-extrabold text-gray-800 drop-shadow-lg">
+    <div className="p-8 min-h-screen bg-gradient-to-br from-teal-50 via-white to-orange-50">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-extrabold text-gray-800">
           Transaction History
         </h1>
-        <img
-          src={logo}
-          alt="Logo"
-          className="w-40 h-auto object-contain drop-shadow-xl mt-4 sm:mt-0"
-        />
+        <img src={logo} alt="Logo" className="w-40" />
       </div>
 
-      {/* Search Bar */}
       <SearchBar
         filters={filters}
         handleChange={handleChange}
@@ -289,35 +262,23 @@ const AdminReport = () => {
             name: "status",
             label: "Status",
             type: "select",
-            options: ["Failed", "Initiated", "Pending", "Successful"],
+            options: ["Failed", "Successful"],
           },
           { name: "billNumber", label: "Transaction ID", type: "text" },
         ]}
       />
 
-      {/* Table Card */}
-      <div className="mt-8">
-        <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-gray-300 p-6 transition-all duration-300 hover:shadow-3xl">
-          <div className="flex items-center gap-3 mb-6">
-            <FaClockRotateLeft className="text-teal-500 text-2xl animate-pulse" />
-            <h2 className="text-2xl font-semibold text-gray-800">
-              Latest Transactions
-            </h2>
-          </div>
-
-          {loading || apiLoading ? (
-            <TableSkeleton rows={rowsPerPage} columns={columns.length} />
-          ) : (
-            <Table
-              columns={columns}
-              data={data}
-              isPaginationRequired={10}
-              rowsPerPage={10}
-              {...tableStyles}
-            />
-          )}
-        </div>
-      </div>
+      {loading || apiLoading ? (
+        <TableSkeleton rows={rowsPerPage} columns={columns.length} />
+      ) : (
+        <Table
+          columns={columns}
+          data={data}
+          rowsPerPage={10}
+          isPaginationRequired
+          {...tableStyles}
+        />
+      )}
     </div>
   );
 };

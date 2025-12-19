@@ -173,12 +173,9 @@ const DetailConfirmation = () => {
   // ---------------- EXECUTE PAYMENT ----------------
   const handlePay = async () => {
     console.log("🔥 Final Payment Payload:", finalMergedData);
-    return;
-    // const response = await fetchPayment(finalMergedData);
-    const response = true;
-    if (response) return;
-    if (!response) return;
-
+    // return;
+    const response = await fetchPayment(finalMergedData);
+    
     // Generic API error
     if (response?.status === false && response?.message) {
       setResError(response.message);
@@ -230,13 +227,27 @@ const DetailConfirmation = () => {
               <input
                 type="number"
                 className="border p-2 rounded w-full focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="Enter a positive number"
                 value={formValues.amount}
-                onChange={(e) =>
-                  setFormValues((prev) => ({
-                    ...prev,
-                    amount: e.target.value,
-                  }))
-                }
+                onChange={(e) => {
+                  const val = e.target.value;
+
+                  // Convert to number
+                  const num = Number(val);
+
+                  // Allow empty input
+                  if (val === "") {
+                    setFormValues((prev) => ({ ...prev, amount: "" }));
+                    return;
+                  }
+
+                  // Only allow positive numbers
+                  if (!isNaN(num) && num >= 0) {
+                    setFormValues((prev) => ({ ...prev, amount: val }));
+                  } else {
+                    alert("Please enter a valid positive number");
+                  }
+                }}
               />
             </div>
           )}
@@ -245,7 +256,7 @@ const DetailConfirmation = () => {
           {isPanInputDisplay && (
             <div className="mt-6 p-5 border border-gray-200 rounded-lg bg-gray-50">
               <h2 className="text-sm font-semibold text-red-600 mb-3">
-                * For payments above ₹50,000, PAN details are required
+                * For payments ₹50,000 and above, PAN details are required
               </h2>
 
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -365,6 +376,7 @@ const DetailConfirmation = () => {
       renderFooter={(close) => (
         <div className="flex justify-center gap-3 mt-4">
           <button
+            type="submit"
             disabled={loading}
             onClick={handlePay}
             className="px-6 py-2 bg-green-600 text-white rounded"
