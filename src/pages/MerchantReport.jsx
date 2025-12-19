@@ -19,32 +19,34 @@ const MerchantReport = () => {
 
   const [data, setData] = useState([]);
   const [apiData, setApiData] = useState([]);
-  const rowsPerPage = 5;
+  const rowsPerPage = 10;
+
   const [cookie] = useCookies();
   const userId = cookie.user.id;
 
-
-  // ⭐ usePost hook
+  /* ---------------- API CALL ---------------- */
   const {
     execute: fetchPayments,
     data: apiResponse,
     isLoading,
-  } = usePost(`/bbps/user-bill-payments-test/json/${userId}`);
+  } = usePost(`/bbps/user-bill-payments/json/${userId}`);
 
-  // ⭐ Fetch API Data on load
   useEffect(() => {
-    const loadPayments = async () => {
-      await fetchPayments(); // triggers API call
-    };
-
-    loadPayments();
+    fetchPayments();
   }, []);
 
-  // ⭐ When API response updates, map to table rows
+  /* ---------------- STATUS MAPPER ---------------- */
+  const mapTxnStatus = (code) => {
+    if (code === "000") return "Successful";
+    if (code === "205" || code === "001") return "Failed";
+    if (code === "102") return "Pending";
+    return "Initiated";
+  };
+
+  /* ---------------- MAP API DATA ---------------- */
   useEffect(() => {
     if (!apiResponse) return;
 
-    // allow both: res.data or res.data.data or raw array
     const list = Array.isArray(apiResponse)
       ? apiResponse
       : Array.isArray(apiResponse.data)
@@ -56,8 +58,8 @@ const MerchantReport = () => {
       RequestId: item.request_id ?? "-",
       Category: item.category ?? "-",
       BillNumber: item.txnRefID ?? "-",
-      Amount: item.respAmount ?? 0,
-      Status: item.responseReason || "Pending",
+      Amount: Number(item.respAmount) || 0,
+      Status: mapTxnStatus(item.txnStatus),
       Date: item.created_at?.split("T")[0] ?? "-",
     }));
 
@@ -65,7 +67,7 @@ const MerchantReport = () => {
     setData(mappedRows);
   }, [apiResponse]);
 
-  // ⭐ Handle Filters
+  /* ---------------- FILTER HANDLERS ---------------- */
   const handleChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
@@ -77,9 +79,11 @@ const MerchantReport = () => {
         (!filters.toDate || item.Date <= filters.toDate) &&
         (!filters.category || item.Category === filters.category) &&
         (!filters.status || item.Status === filters.status) &&
-        (!filters.billNumber || item.BillNumber.includes(filters.billNumber))
+        (!filters.billNumber ||
+          item.BillNumber?.includes(filters.billNumber))
       );
     });
+
     setData(filtered);
   };
 
@@ -94,28 +98,32 @@ const MerchantReport = () => {
     setData(apiData);
   };
 
-  // ⭐ Export Excel
+  /* ---------------- EXPORT EXCEL ---------------- */
   const exportExcel = () => {
     if (!data.length) return alert("No data to export.");
+
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Merchant Report");
     XLSX.writeFile(wb, "Merchant_Report.xlsx");
   };
 
-  // ⭐ Export PDF
+  /* ---------------- EXPORT PDF ---------------- */
   const exportPDF = () => {
     if (!data.length) return alert("No data to export.");
+
     const doc = new jsPDF();
+
     const tableColumn = [
-      "SrNo",
-      "Request Id",
+      "Sr No",
+      "Request ID",
       "Category",
       "Bill Number",
       "Amount",
       "Status",
       "Date",
     ];
+
     const tableRows = data.map((item) => [
       item.SrNo,
       item.RequestId,
@@ -126,23 +134,50 @@ const MerchantReport = () => {
       item.Date,
     ]);
 
-    autoTable(doc, { head: [tableColumn], body: tableRows });
+    autoTable(doc, {
+      startY:25,
+      head: [tableColumn],
+      body: tableRows,
+      theme: "grid",
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+        halign: "center",
+      },
+      headStyles: {
+        fillColor: [37, 99, 235],
+        textColor: 255,
+        fontStyle: "bold",
+      },
+      columnStyles: {
+        0: { cellWidth: 10 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 30 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: 25 },
+        6: { cellWidth: 30 },
+      },
+    });
+
     doc.save("Merchant_Report.pdf");
   };
 
-  // ⭐ Status UI
+  /* ---------------- STATUS BADGE ---------------- */
   const renderStatusLabel = (status) => {
+    const isSuccess = status === "Successful";
+
     const base =
-      "inline-block px-1 py-1 text-xs font-semibold rounded-full shadow-sm w-20 text-center";
-    const styles = {
-      Successful: "bg-green-100 text-green-700",
-      Failed: "bg-red-100 text-red-700",
-      Pending: "bg-yellow-100 text-yellow-700",
-      Initiated: "bg-blue-100 text-blue-700",
-    };
-    return <span className={`${base} ${styles[status]}`}>{status}</span>;
+      "inline-block px-2 py-1 text-xs font-semibold rounded-full shadow-sm w-24 text-center";
+
+    const className = isSuccess
+      ? "bg-green-100 text-green-700"
+      : "bg-red-100 text-red-700";
+
+    return <span className={`${base} ${className}`}>{status}</span>;
   };
 
+  /* ---------------- FORMAT CURRENCY ---------------- */
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -150,6 +185,7 @@ const MerchantReport = () => {
       minimumFractionDigits: 2,
     }).format(amount);
 
+  /* ---------------- TABLE COLUMNS ---------------- */
   const columns = [
     "SrNo",
     "RequestId",
@@ -170,9 +206,9 @@ const MerchantReport = () => {
     "Date",
   ];
 
+  /* ---------------- RENDER ---------------- */
   return (
     <div className="p-8 bg-gradient-to-br from-blue-50 via-gray-100 to-blue-100 min-h-screen">
-
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-extrabold text-gray-800">
           Transaction History
@@ -194,13 +230,43 @@ const MerchantReport = () => {
             name: "category",
             label: "Category",
             type: "select",
-            options: ["Electricity", "Gas", "Fastag", "LPG Gas"],
+            options: [
+              "Agent Collection",
+              "Broadband Postpaid",
+              "Cable TV",
+              "Clubs and Associations",
+              "Credit Card",
+              "Donation",
+              "DTH",
+              "eChallan",
+              "Education Fees",
+              "Electricity",
+              "EV Recharge",
+              "Fastag",
+              "Gas",
+              "Housing Society",
+              "Insurance",
+              "Landline Postpaid",
+              "Loan Repayment",
+              "LPG Gas",
+              "Mobile Postpaid",
+              "Mobile Prepaid",
+              "Municipal Services",
+              "Municipal Taxes",
+              "National Pension System",
+              "NCMC Recharge",
+              "Prepaid Meter",
+              "Recurring Deposit",
+              "Rental",
+              "Subscription",
+              "Water",
+            ],
           },
           {
             name: "status",
             label: "Status",
             type: "select",
-            options: ["Failed", "Initiated", "Pending", "Successful"],
+            options: ["Successful", "Failed", "Pending", "Initiated"],
           },
           { name: "billNumber", label: "Bill Number", type: "text" },
         ]}
@@ -220,12 +286,12 @@ const MerchantReport = () => {
             columns={columns}
             data={data}
             rowsPerPage={rowsPerPage}
-            isPaginationRequired={true}
-              tableClass="min-w-full border border-gray-400 text-sm text-gray-700 font-sans overflow-x-auto"
-          headerClass="bg-blue-600 text-white font-semibold text-left uppercase border-b border-gray-400"
-          rowClass="bg-white hover:bg-blue-100 border-b border-gray-300 transition-colors duration-200"
-          cellClass="py-3 px-4 text-gray-700 whitespace-nowrap"
-          paginationClass="flex justify-center gap-2 mt-4 text-gray-700 font-medium"
+            isPaginationRequired
+            tableClass="min-w-full border border-gray-400 text-sm"
+            headerClass="bg-blue-600 text-white uppercase border-b"
+            rowClass="hover:bg-blue-100 border-b"
+            cellClass="py-3 px-4 whitespace-nowrap"
+            paginationClass="flex justify-center gap-2 mt-4"
           />
         )}
       </div>

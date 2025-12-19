@@ -39,15 +39,14 @@ const CheckTransactionStatus = () => {
     try {
       const result = await execute(body);
 
-      if (result?.responses[requestId || mobile]) {
+      if (result?.responses[requestId || mobile].errorInfo) {
         setResError(
           result?.responses[requestId || mobile].errorInfo.error[0].errorMessage
         );
         return;
         // console.log("level 44",);
       }
-
-      const txn = result.responses?.[requestId || mobile]?.txnList || [];
+      const txn = result?.responses?.[requestId || mobile]?.txnList || [];
       setResponse(txn);
     } catch (error) {
       console.log("errror", error);

@@ -5,6 +5,8 @@ import {
   faBuildingColumns,
   faTriangleExclamation,
   faCircleExclamation,
+  faUsers
+  ,faDiagramProject
 } from "@fortawesome/free-solid-svg-icons";
 import { faFileLines } from "@fortawesome/free-regular-svg-icons";
 import { Link, useLocation } from "react-router-dom";
@@ -28,25 +30,27 @@ export const navItems = [
     roles: ["admin", "user"],
     component: Dashboard,
   },
-  {
-    icon: faCircleExclamation,
-    label: "Scheme",
-    path: "/scheme",
-    roles: ["admin"],
-    component: Scheme,
-  },
-  {
-    icon: faBuildingColumns,
-    label: "Users",
-    path: "/users",
-    roles: ["admin"],
-    component: Users,
-  },
+{
+  icon: faDiagramProject,
+  label: "Scheme",
+  path: "/scheme",
+  roles: ["admin"],
+  component: Scheme,
+}
+,
+ {
+  icon: faUsers,
+  label: "Users",
+  path: "/users",
+  roles: ["admin"],
+  component: Users,
+}
+,
   {
     icon: faBuildingColumns,
     label: "Services",
     path: "/services",
-    roles: ["user"],
+    roles: ["user","admin"],
     component: ServicePage,
   },
   {
@@ -60,7 +64,7 @@ export const navItems = [
     icon: faMagnifyingGlass,
     label: "Support",
     path: "/support",
-    roles: ["user"],
+    roles: ["user","admin"],
     component: Support,
   },
   {
@@ -74,16 +78,16 @@ export const navItems = [
     icon: faCircleExclamation,
     label: "Check Complaint",
     path: "/checkcomplaint",
-    roles: ["user"],
+    roles: ["user","admin"],
     component: CheckTransactionComplaint,
   },
-  {
-    icon: faCircleExclamation,
-    label: "Check Transaction Status",
-    path: "/checktransactionstatus",
-    roles: ["admin"],
-    component: CheckTransactionStatus,
-  },
+  // {
+  //   icon: faCircleExclamation,
+  //   label: "Check Transaction Status",
+  //   path: "/checktransactionstatus",
+  //   roles: ["admin"],
+  //   component: CheckTransactionStatus,
+  // },
 ];
 
 export const Sidebar = ({
