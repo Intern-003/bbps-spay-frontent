@@ -8,6 +8,10 @@ import { CookiesProvider } from "react-cookie";
 import { SchemeContextProvider } from "./contexts/SchemeContext";
 import UpdateUser from "./pages/UpdateUser";
 import RedirectGuard from "./components/RedirectGuard";
+import RegisterUser from "./pages/RegisterUser";
+import UserRegristrationPage from "./pages/OrganizationRegristrationPage";
+import UserRegristration from "./pages/UserRegristration";
+import UserInstruction from "./pages/UserInstruction";
 
 function App() {
   return (
@@ -16,7 +20,13 @@ function App() {
         <Routes>
           {/* Public Route */}
           <Route path="/" element={<LoginPage />} />
-
+          <Route path="/register" element={<RegisterUser />} />
+          <Route
+            path="/register-organization"
+            element={<UserRegristrationPage />}
+          />
+          <Route path="/register-user" element={<UserRegristration />} />
+          <Route path="/user-instruction" element={<UserInstruction />} />
           {/* Protected Layout Wrapper */}
           <Route
             element={

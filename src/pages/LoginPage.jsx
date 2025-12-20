@@ -1,21 +1,20 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import LoginIllustration from '../images/loginbg.jpg';
-import { usePost } from '../hooks/usePost';
-import { useCookies } from "react-cookie"
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import LoginIllustration from "../images/loginbg.jpg";
+import { usePost } from "../hooks/usePost";
+import { useCookies } from "react-cookie";
 //9284210056
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
   const [cookie, setCookie] = useCookies(["token"]);
   const { data, loading, error, execute: login } = usePost("/login"); // Initialize hook correctly
 
-
-    useEffect(()=>{
-      setErrorMsg(error?.message)
-    },[error])
+  useEffect(() => {
+    setErrorMsg(error?.message);
+  }, [error]);
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!email || !password) {
@@ -29,19 +28,18 @@ const LoginPage = () => {
 
       console.log("Login success:", res);
       setCookie("token", res.token, {
-        path: "/"
+        path: "/",
       });
       setCookie("role", res.user.role_id, {
-        path: "/"
+        path: "/",
       });
       setCookie("user", res.user, {
-        path: "/"
+        path: "/",
       });
 
       navigate("/dashboard");
-
     } catch (err) {
-      const message = errorMsg ||"Something went wrong";
+      const message = errorMsg || "Something went wrong";
       // setErrorMsg(message);
       console.log("Login error:", message);
       // alert(message)
@@ -51,7 +49,6 @@ const LoginPage = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
       <div className="flex flex-col md:flex-row bg-white rounded-xl shadow-2xl overflow-hidden max-w-4xl w-full">
-
         <div className="w-full md:w-1/2 bg-gray-50 flex items-center justify-center p-8">
           <img
             src={LoginIllustration}
@@ -65,7 +62,10 @@ const LoginPage = () => {
 
           <form onSubmit={handleLogin}>
             <div className="mb-6">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1 uppercase">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-1 uppercase"
+              >
                 Email
               </label>
               <input
@@ -80,7 +80,10 @@ const LoginPage = () => {
             </div>
 
             <div className="mb-8">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1 uppercase">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-1 uppercase"
+              >
                 Password
               </label>
               <input
@@ -97,10 +100,20 @@ const LoginPage = () => {
             {errorMsg && (
               <p className="text-red-500 text-sm mb-4">{errorMsg}</p>
             )}
-
+            <div>
+              <span className="text-gray-300 text-sm">
+                Don’t have an account?{" "}
+                <a
+                  href="/register"
+                  className="text-blue-400 hover:text-blue-600 underline"
+                >
+                  Register
+                </a>
+              </span>
+            </div>
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-200 shadow-md"
+              className="w-full bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md"
               disabled={loading}
             >
               {loading ? "Signing In..." : "Sign In"}
