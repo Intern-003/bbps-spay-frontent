@@ -20,13 +20,13 @@ function App() {
         <Routes>
           {/* Public Route */}
           <Route path="/" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterUser />} />
-          <Route
+          {/* <Route path="/register" element={<RegisterUser />} /> */}
+          {/* <Route
             path="/register-organization"
             element={<UserRegristrationPage />}
-          />
-          <Route path="/register-user" element={<UserRegristration />} />
-          <Route path="/user-instruction" element={<UserInstruction />} />
+          /> */}
+          {/* <Route path="/register-user" element={<UserRegristration />} /> */}
+          {/* <Route path="/user-instruction" element={<UserInstruction />} /> */}
           {/* Protected Layout Wrapper */}
           <Route
             element={

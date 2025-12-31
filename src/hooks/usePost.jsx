@@ -16,7 +16,6 @@ export function usePost(endpoint) {
 
     try {
       let response;
-
       // ---------- LOGIN REQUEST ----------
       if (endpoint === "/login") {
         response = await axios.post(
@@ -32,6 +31,21 @@ export function usePost(endpoint) {
         );
         console.log(" here is response :", response);
         return response.data;
+      }
+
+      if (
+        endpoint === "/send-mobile-otp" ||
+        endpoint === "/verify-mobile-otp" ||
+        endpoint === "/send-mail-otp" ||
+        endpoint === "/verify-mail-otp"
+      ) {
+        console.log(`${BASE_URL}${endpoint}`);
+        console.log(body);
+
+        response = await axios.post(`${BASE_URL}${endpoint}`, body, {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        });
       }
 
       // ---------- BBPS RAW JSON REQUEST ----------

@@ -4,9 +4,9 @@ import Table from "./Table";
 import { FaRegCopy } from "react-icons/fa";
 
 import Service1 from "../images/logo.png";
-import Service2 from "../images/placeholder.jpeg";
-import Service3 from "../images/placeholder.jpeg";
-import Service4 from "../images/placeholder.jpeg";
+import Service2 from "../images/1.png";
+import Service3 from "../images/2.png";
+import Service4 from "../images/3.png";
 import { useCookies } from "react-cookie";
 import { useGet } from "../hooks/useGet";
 

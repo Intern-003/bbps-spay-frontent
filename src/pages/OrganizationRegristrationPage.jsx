@@ -5,7 +5,7 @@ import { usePost } from "../hooks/usePost";
 const OrganizationRegristrationPage = () => {
   const navigate = useNavigate();
   // const { execute: executeMember, loading } = usePost("/onboard-merchant");
-
+  const loading = false;
   const [formData, setFormData] = useState({
     // BUSINESS DETAILS
     name: "",
@@ -133,6 +133,11 @@ const OrganizationRegristrationPage = () => {
     });
 
     fd.append("scheme_id", "");
+
+
+       fd.forEach((value, key) => {
+      console.log(key, value);
+    });
 
     // const res = await executeMember(fd);
     // if (res?.success) {
