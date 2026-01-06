@@ -5,7 +5,16 @@ import { usePost } from "../hooks/usePost";
 const RegisterUser = () => {
   const navigate = useNavigate();
 
-  /* ---------------- FORM STATE ---------------- */
+  /* ---------------- API ---------------- */
+  const { execute: regUser, loading: regLoading } = usePost(
+    "/register-new-merchant"
+  );
+  const { execute: sendPhoneOTP } = usePost("/send-mobile-otp");
+  const { execute: verifyPhoneOTP } = usePost("/verify-mobile-otp");
+  const { execute: sendEmailOTP } = usePost("/send-mail-otp");
+  const { execute: verifyEmailOTP } = usePost("/verify-mail-otp");
+
+  /* ---------------- FORM ---------------- */
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -23,19 +32,12 @@ const RegisterUser = () => {
   const [emailOtpSent, setEmailOtpSent] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
 
-  /* ---------------- UI STATE ---------------- */
+  /* ---------------- UI ---------------- */
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  /* ---------------- API HOOKS ---------------- */
-  const { execute: sendPhoneOTP } = usePost("/send-mobile-otp");
-  const { execute: verifyPhoneOTP } = usePost("/verify-mobile-otp");
-
-  const { execute: sendEmailOTP } = usePost("/send-mail-otp");
-  const { execute: verifyEmailOTP } = usePost("/verify-mail-otp");
-
-  /* ---------------- PHONE OTP HANDLERS ---------------- */
+  /* ---------------- PHONE OTP ---------------- */
   const handleSendPhoneOTP = async (e) => {
     e.preventDefault();
     setError("");
@@ -47,6 +49,7 @@ const RegisterUser = () => {
       setLoading(true);
       await sendPhoneOTP({ mobile_no: phone });
       setPhoneOtpSent(true);
+      setPhoneOtp("");
       setSuccess("Phone OTP sent");
     } catch {
       setError("Failed to send phone OTP");
@@ -58,26 +61,28 @@ const RegisterUser = () => {
   const handleVerifyPhoneOTP = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
-    if (!/^\d{6}$/.test(phoneOtp))
+    if (!/^\d{6}$/.test(phoneOtp)) {
+      setPhoneOtp("");
       return setError("Phone OTP must be 6 digits");
+    }
 
     try {
       setLoading(true);
-      await verifyPhoneOTP({
-        mobile_no: phone,
-        unique_otp: phoneOtp,
-      });
+      await verifyPhoneOTP({ mobile_no: phone, unique_otp: phoneOtp });
       setPhoneVerified(true);
       setSuccess("Phone verified");
     } catch {
-      setError("Invalid phone OTP");
+      setPhoneOtp("");
+      setPhoneOtpSent(false); // ✅ allow resend
+      setError("Invalid phone OTP. Try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  /* ---------------- EMAIL OTP HANDLERS ---------------- */
+  /* ---------------- EMAIL OTP ---------------- */
   const handleSendEmailOTP = async (e) => {
     e.preventDefault();
     setError("");
@@ -89,6 +94,7 @@ const RegisterUser = () => {
       setLoading(true);
       await sendEmailOTP({ email });
       setEmailOtpSent(true);
+      setEmailOtp("");
       setSuccess("Email OTP sent");
     } catch {
       setError("Failed to send email OTP");
@@ -100,41 +106,51 @@ const RegisterUser = () => {
   const handleVerifyEmailOTP = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
-    if (!/^\d{6}$/.test(emailOtp))
+    if (!/^\d{6}$/.test(emailOtp)) {
+      setEmailOtp("");
       return setError("Email OTP must be 6 digits");
+    }
 
     try {
       setLoading(true);
-      await verifyEmailOTP({
-        email,
-        unique_otp: emailOtp,
-      });
+      await verifyEmailOTP({ email, unique_otp: emailOtp });
       setEmailVerified(true);
       setSuccess("Email verified");
     } catch {
-      setError("Invalid email OTP");
+      setEmailOtp("");
+      setEmailOtpSent(false); // ✅ allow resend
+      setError("Invalid email OTP. Try again.");
     } finally {
       setLoading(false);
     }
   };
 
   /* ---------------- SUBMIT ---------------- */
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!phoneVerified)
-      return setError("Please verify phone number");
-
-    if (!emailVerified)
-      return setError("Please verify email address");
-
-    if (password !== confirmPassword)
-      return setError("Passwords do not match");
+    if (!phoneVerified) return setError("Verify phone number");
+    if (!emailVerified) return setError("Verify email address");
+    if (password !== confirmPassword) return setError("Passwords do not match");
 
     if (option === "Organization") {
-      navigate("/register-organization");
+      try {
+        const body = { name, mobile_no: phone, email, password };
+        const res = await regUser(body);
+        console.log("check 144", res?.registered);
+
+        if (res?.registered) {
+          // navigate();
+          navigate("/register-organization", {
+            state: { name, phone, email, option },
+          });
+        }
+      } catch (err) {
+        setError(err?.message || "Registration failed");
+      }
     } else {
       navigate("/register-user", {
         state: { name, phone, email, option },
@@ -146,137 +162,112 @@ const RegisterUser = () => {
     <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-lg bg-white rounded-xl shadow-md p-6 sm:p-8 space-y-6"
+        className="w-full max-w-lg bg-white rounded-xl shadow-md p-6 space-y-6"
       >
-        {/* HEADER */}
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold text-slate-800">
-            Create Account
-          </h2>
-          <p className="text-sm text-slate-500">
-            Verify phone & email to continue
-          </p>
-        </div>
+        <h2 className="text-2xl font-semibold text-center">Create Account</h2>
 
-        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-        {success && <p className="text-sm text-green-600 text-center">{success}</p>}
+        {error && <p className="text-red-500 text-center">{error}</p>}
+        {success && <p className="text-green-600 text-center">{success}</p>}
 
-        {/* NAME */}
+        <input
+          placeholder="Full Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full border rounded-lg px-4 py-2"
+        />
+
+        {/* PHONE */}
         <div>
-          <label className="text-sm font-medium text-slate-700">Full Name</label>
           <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="w-full rounded-lg border px-4 py-2.5 text-sm"
+            placeholder="Phone"
+            type="number"
+            value={phone}
+            disabled={phoneVerified}
+            onChange={(e) => setPhone(e.target.value)}
+            className="w-full border rounded-lg px-4 py-2"
           />
-        </div>
+          <button
+            onClick={handleSendPhoneOTP}
+            disabled={phoneVerified}
+            className="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg"
+          >
+            {phoneOtpSent ? "Resend OTP" : "Send OTP"}
+          </button>
 
-        {/* PHONE OTP */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">Phone Number</label>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              disabled={phoneVerified}
-              className="flex-1 rounded-lg border px-4 py-2.5 text-sm"
-            />
-            <button
-              onClick={handleSendPhoneOTP}
-              disabled={phoneOtpSent}
-              className="bg-blue-600 text-white rounded-lg px-4 py-2.5 text-sm disabled:opacity-50"
-            >
-              {phoneOtpSent ? "OTP Sent" : "Send OTP"}
-            </button>
-          </div>
-
-          {phoneOtpSent && (
-            <div className="flex flex-col sm:flex-row gap-3">
+          {phoneOtpSent && !phoneVerified && (
+            <div className="flex gap-2 mt-2">
               <input
                 value={phoneOtp}
                 maxLength={6}
-                onChange={(e) =>
-                  setPhoneOtp(e.target.value.replace(/\D/g, ""))
-                }
-                disabled={phoneVerified}
-                className="flex-1 rounded-lg border px-4 py-2.5 text-center tracking-widest"
+                onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, ""))}
+                className="flex-1 border rounded-lg px-4 py-2 text-center"
               />
               <button
                 onClick={handleVerifyPhoneOTP}
-                disabled={phoneVerified}
-                className="bg-emerald-600 text-white rounded-lg px-4 py-2.5 text-sm disabled:opacity-50"
+                className="bg-emerald-600 text-white px-4 rounded-lg"
               >
-                {phoneVerified ? "Verified" : "Verify"}
+                Verify
               </button>
             </div>
           )}
         </div>
 
-        {/* EMAIL OTP */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">Email Address</label>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={emailVerified}
-              className="flex-1 rounded-lg border px-4 py-2.5 text-sm"
-            />
-            <button
-              onClick={handleSendEmailOTP}
-              disabled={emailOtpSent}
-              className="bg-blue-600 text-white rounded-lg px-4 py-2.5 text-sm disabled:opacity-50"
-            >
-              {emailOtpSent ? "OTP Sent" : "Send OTP"}
-            </button>
-          </div>
+        {/* EMAIL */}
+        <div>
+          <input
+            placeholder="Email"
+            value={email}
+            type="email"
+            disabled={emailVerified}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border rounded-lg px-4 py-2"
+          />
+          <button
+            onClick={handleSendEmailOTP}
+            disabled={emailVerified}
+            className="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg"
+          >
+            {emailOtpSent ? "Resend OTP" : "Send OTP"}
+          </button>
 
-          {emailOtpSent && (
-            <div className="flex flex-col sm:flex-row gap-3">
+          {emailOtpSent && !emailVerified && (
+            <div className="flex gap-2 mt-2">
               <input
                 value={emailOtp}
                 maxLength={6}
-                onChange={(e) =>
-                  setEmailOtp(e.target.value.replace(/\D/g, ""))
-                }
-                disabled={emailVerified}
-                className="flex-1 rounded-lg border px-4 py-2.5 text-center tracking-widest"
+                onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, ""))}
+                className="flex-1 border rounded-lg px-4 py-2 text-center"
               />
               <button
                 onClick={handleVerifyEmailOTP}
-                disabled={emailVerified}
-                className="bg-emerald-600 text-white rounded-lg px-4 py-2.5 text-sm disabled:opacity-50"
+                className="bg-emerald-600 text-white px-4 rounded-lg"
               >
-                {emailVerified ? "Verified" : "Verify"}
+                Verify
               </button>
             </div>
           )}
         </div>
 
-        {/* PASSWORDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rounded-lg border px-4 py-2.5 text-sm"
-          />
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="rounded-lg border px-4 py-2.5 text-sm"
-          />
-        </div>
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full border rounded-lg px-4 py-2"
+        />
 
-        {/* ACCOUNT TYPE */}
+        <input
+          type="password"
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          className="w-full border rounded-lg px-4 py-2"
+        />
+
         <select
           value={option}
           onChange={(e) => setOption(e.target.value)}
-          className="w-full rounded-lg border px-4 py-2.5 text-sm"
+          className="w-full border rounded-lg px-4 py-2"
         >
           <option value="Individual">Individual</option>
           <option value="Organization">Organization</option>
@@ -284,9 +275,10 @@ const RegisterUser = () => {
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-3 rounded-lg text-sm font-medium hover:bg-blue-700"
+          disabled={regLoading}
+          className="w-full bg-blue-600 text-white py-3 rounded-lg disabled:opacity-50"
         >
-          Create Account
+          {regLoading ? "Creating..." : "Create Account"}
         </button>
       </form>
     </div>

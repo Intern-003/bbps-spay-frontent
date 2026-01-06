@@ -78,7 +78,7 @@ const Merchent = () => {
       id: item.id,
       user_name: item.user_name,
       request_id: item.spay_txn_id || "-",
-      category: item.product_type,
+      category: item.biller_category,
       mobile_no: item.mobile,
       respAmount: item.amount,
       txnStatus: item.status,

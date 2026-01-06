@@ -12,6 +12,7 @@ import RegisterUser from "./pages/RegisterUser";
 import UserRegristrationPage from "./pages/OrganizationRegristrationPage";
 import UserRegristration from "./pages/UserRegristration";
 import UserInstruction from "./pages/UserInstruction";
+import UserRegProtectedRoute from "./components/UserRegProtectedRoute";
 
 function App() {
   return (
@@ -20,13 +21,17 @@ function App() {
         <Routes>
           {/* Public Route */}
           <Route path="/" element={<LoginPage />} />
-          {/* <Route path="/register" element={<RegisterUser />} /> */}
-          {/* <Route
-            path="/register-organization"
-            element={<UserRegristrationPage />}
-          /> */}
-          {/* <Route path="/register-user" element={<UserRegristration />} /> */}
-          {/* <Route path="/user-instruction" element={<UserInstruction />} /> */}
+          <Route path="/register" element={<RegisterUser />} />
+
+          <Route element={<UserRegProtectedRoute isAllowed={true} />}>
+            <Route
+              path="/register-organization"
+              element={<UserRegristrationPage />}
+            />
+            <Route path="/register-user" element={<UserRegristration />} />
+            <Route path="/user-instruction" element={<UserInstruction />} />
+          </Route>
+
           {/* Protected Layout Wrapper */}
           <Route
             element={
