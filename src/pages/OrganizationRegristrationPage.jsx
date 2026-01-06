@@ -1,16 +1,23 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate ,useLocation} from "react-router-dom";
 import { usePost } from "../hooks/usePost";
 
 const OrganizationRegristrationPage = () => {
   const navigate = useNavigate();
-  // const { execute: executeMember, loading } = usePost("/onboard-merchant");
-
+  const location=useLocation();
+  // const {
+  //   name = "",
+  //   email = "",
+  //   phone = "",
+  //   option = "",
+  // } = location.state || {};
+  const { execute: executeMember, loading } = usePost("/self-merchant-onboard-process");
+  // const loading = false;
   const [formData, setFormData] = useState({
     // BUSINESS DETAILS
     name: "",
     mobile_no: "",
-    email: "",
+    email: "",  
     business_mcc: "",
     company_type: "",
     company_pan_no: "",
@@ -134,13 +141,18 @@ const OrganizationRegristrationPage = () => {
 
     fd.append("scheme_id", "");
 
-    // const res = await executeMember(fd);
-    // if (res?.success) {
-    //   alert(res.message || "Merchant registered successfully!");
-    //   navigate("/users");
-    // } else {
-    //   alert("Failed: " + (res?.message || JSON.stringify(res)));
-    // }
+
+    //    fd.forEach((value, key) => {
+    //   console.log(key, value);
+    // });
+
+    const res = await executeMember(fd);
+    if (res?.success) {
+      alert(res.message || "Merchant registered successfully! we will lwt you know with in 24-48 hrs");
+      navigate("/");
+    } else {
+      alert("Failed: " + (res?.message || JSON.stringify(res)));
+    }
   };
 
   const onCancel = () => {
@@ -177,6 +189,7 @@ const OrganizationRegristrationPage = () => {
               <label className={label}>Mobile *</label>
               <input
                 className={input}
+                type="number"
                 value={formData.mobile_no}
                 onChange={(e) => handleChange("mobile_no", e.target.value)}
                 pattern={validationRules.mobile_no.pattern.source}
@@ -188,6 +201,7 @@ const OrganizationRegristrationPage = () => {
             <div>
               <label className={label}>Business Email *</label>
               <input
+              type="email"
                 className={input}
                 value={formData.email}
                 onChange={(e) => handleChange("email", e.target.value)}

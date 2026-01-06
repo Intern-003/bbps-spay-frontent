@@ -4,9 +4,9 @@ import Table from "./Table";
 import { FaRegCopy } from "react-icons/fa";
 
 import Service1 from "../images/logo.png";
-import Service2 from "../images/placeholder.jpeg";
-import Service3 from "../images/placeholder.jpeg";
-import Service4 from "../images/placeholder.jpeg";
+import Service2 from "../images/1.png";
+import Service3 from "../images/2.png";
+import Service4 from "../images/3.png";
 import { useCookies } from "react-cookie";
 import { useGet } from "../hooks/useGet";
 
@@ -78,7 +78,7 @@ const Merchent = () => {
       id: item.id,
       user_name: item.user_name,
       request_id: item.spay_txn_id || "-",
-      category: item.product_type,
+      category: item.biller_category,
       mobile_no: item.mobile,
       respAmount: item.amount,
       txnStatus: item.status,

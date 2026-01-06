@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const UserInstruction = () => {
   const location = useLocation();
   const userData = location.state?.userData || {};
-
+  const navigate = useNavigate();
   const [page, setPage] = useState(0);
   const [acceptVideo, setAcceptVideo] = useState(false);
   const [videoFile, setVideoFile] = useState(null);
@@ -81,7 +81,11 @@ const UserInstruction = () => {
 
   const handleSubmit = () => {
     console.log("Video Submitted:", videoFile);
-    alert("Video submitted successfully!");
+
+    alert(
+      "Your Data has been reserved your account will be activated with in 24-48 Hours"
+    );
+    navigate("/");
   };
 
   return (
@@ -94,7 +98,8 @@ const UserInstruction = () => {
               Hi {userData.name || "User"}!
             </h1>
             <p className="text-gray-600 text-lg">
-              Please complete your Self Video KYC by following the instructions below.
+              Please complete your Self Video KYC by following the instructions
+              below.
             </p>
           </div>
 
@@ -108,7 +113,9 @@ const UserInstruction = () => {
 
           {/* Instruction Card */}
           <div className="bg-white rounded-xl shadow-xl p-8 mb-6 hover:shadow-2xl transition-shadow duration-300">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">{data[page].title}</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+              {data[page].title}
+            </h2>
             <ul className="list-disc list-inside space-y-3 text-gray-700 text-lg">
               {data[page].points.map((point, index) => (
                 <li key={index}>{point}</li>
@@ -122,7 +129,9 @@ const UserInstruction = () => {
               disabled={page === 0}
               onClick={() => setPage(page - 1)}
               className={`px-6 py-3 rounded-lg font-medium text-white transition-colors duration-300 ${
-                page === 0 ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+                page === 0
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
               Prev
@@ -131,7 +140,9 @@ const UserInstruction = () => {
             <button
               onClick={handleNext}
               className={`px-6 py-3 rounded-lg font-medium text-white transition-colors duration-300 ${
-                page === totalSteps - 1 ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"
+                page === totalSteps - 1
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
               {page === totalSteps - 1 ? "Upload Video" : "Next"}
@@ -169,7 +180,9 @@ const UserInstruction = () => {
               onClick={handleSubmit}
               disabled={!videoFile}
               className={`px-6 py-3 rounded-lg text-white transition-colors ${
-                videoFile ? "bg-green-600 hover:bg-green-700" : "bg-gray-400 cursor-not-allowed"
+                videoFile
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-gray-400 cursor-not-allowed"
               }`}
             >
               Submit
