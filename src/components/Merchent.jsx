@@ -9,19 +9,15 @@ import Service3 from "../images/2.png";
 import Service4 from "../images/3.png";
 import { useCookies } from "react-cookie";
 import { useGet } from "../hooks/useGet";
-
+import TableSkeleton from "../components/TableSkeleton";
 const Merchent = () => {
-
-
-
   const navigate = useNavigate();
   const [cookie] = useCookies();
   const userId = cookie.user.id;
 
-  const { data: merchantsData } = useGet(`/reports/user/${userId}`);
-
-  console.log("Merchants Data:", merchantsData);
-
+  const { loading: dataLoding, data: merchantsData } = useGet(
+    `/reports/user/${userId}`
+  );
 
   const handelServiceClick = () => {
     navigate("/services");
@@ -45,7 +41,11 @@ const Merchent = () => {
     };
 
     return (
-      <span className={`${base} ${styles[normalized] || "bg-gray-100 text-gray-700"}`}>
+      <span
+        className={`${base} ${
+          styles[normalized] || "bg-gray-100 text-gray-700"
+        }`}
+      >
         {status}
       </span>
     );
@@ -65,13 +65,9 @@ const Merchent = () => {
         minute: "2-digit",
         hour12: true,
       });
-    return (formatted)
-  }
+    return formatted;
+  };
   // const dateTime = "2025-12-02 10:57:27";
-
-
-  // console.log(formatted);
-
 
   const tData =
     merchantsData?.data?.map((item) => ({
@@ -89,9 +85,8 @@ const Merchent = () => {
       created_at: item.created_at,
     })) || [];
 
-
   const tColumns = [
-    { label: "ID", key: "id" },
+    { label: "Sr No", key: "id" },
     { label: "User Name", key: "user_name" },
     { label: "Request ID", key: "request_id" },
     { label: "Category", key: "category" },
@@ -104,21 +99,22 @@ const Merchent = () => {
     },
 
     {
-      label: "Date", key: "created_at",
-      render: (item) =>dateFormat(item.created_at)
-     },
+      label: "Date",
+      key: "created_at",
+      render: (item) => dateFormat(item.created_at),
+    },
 
     // {label:"NONE",key:"trikj"}
   ];
-  console.log(cookie.user);
 
   return (
     <span>
       <section className="flex flex-col md:flex-row bg-gray-50 p-6 rounded-lg shadow-md gap-6">
-
         {/* Account Details */}
-        <div className="flex flex-col items-center justify-center text-center w-full md:w-1/3 bg-gradient-to-br from-gray-100 to-gray-200 p-6 rounded-xl shadow-sm border border-blue-200 
-        hover:shadow-lg hover:-translate-y-1 transform transition-all duration-300">
+        <div
+          className="flex flex-col items-center justify-center text-center w-full md:w-1/3 bg-gradient-to-br from-gray-100 to-gray-200 p-6 rounded-xl shadow-sm border border-blue-200 
+        hover:shadow-lg hover:-translate-y-1 transform transition-all duration-300"
+        >
           <h3 className="text-lg font-semibold text-gray-700 mb-2">
             Virtual Account
           </h3>
@@ -180,18 +176,21 @@ const Merchent = () => {
         </div>
 
         {/* Services */}
-        <div className="flex-1 bg-white p-6 rounded-lg shadow-md border border-blue-200 
-        hover:shadow-md hover:-translate-y-1 transform transition-all duration-300">
+        <div
+          className="flex-1 bg-white p-6 rounded-lg shadow-md border border-blue-200 
+        hover:shadow-md hover:-translate-y-1 transform transition-all duration-300"
+        >
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Services</h2>
 
           <div className="grid grid-cols-2 gap-4">
-
             <div
               className="flex flex-col items-center p-4 bg-blue-50 rounded-lg hover:bg-green-200 transition-all shadow-sm hover:shadow-lg hover:-translate-y-1 transform duration-300 cursor-pointer"
               onClick={handelServiceClick}
             >
               <img src={Service1} className="w-10 h-10 mb-2" />
-              <span className="text-gray-700 text-sm font-medium">Bill Payment</span>
+              <span className="text-gray-700 text-sm font-medium">
+                Bill Payment
+              </span>
             </div>
 
             <div
@@ -199,7 +198,9 @@ const Merchent = () => {
               onClick={handelServiceClick}
             >
               <img src={Service2} className="w-10 h-10 mb-2" />
-              <span className="text-gray-700 text-sm font-medium">Post Paid</span>
+              <span className="text-gray-700 text-sm font-medium">
+                Post Paid
+              </span>
             </div>
 
             <div
@@ -207,17 +208,17 @@ const Merchent = () => {
               onClick={handelServiceClick}
             >
               <img src={Service3} className="w-10 h-10 mb-2" />
-              <span className="text-gray-700 text-sm font-medium">Recharge</span>
+              <span className="text-gray-700 text-sm font-medium">
+                Recharge
+              </span>
             </div>
 
             <div className="flex flex-col items-center p-4 bg-gray-200 rounded-lg cursor-not-allowed opacity-70">
               <img src={Service4} className="w-10 h-10 mb-2" />
               <span className="text-gray-500 text-sm">Coming Soon</span>
             </div>
-
           </div>
         </div>
-
       </section>
 
       {/* Latest Transactions */}
@@ -225,20 +226,23 @@ const Merchent = () => {
         <h2 className="text-lg font-semibold text-gray-800 mb-2 border-b pb-2">
           Latest Transaction List
         </h2>
-        <Table
-          isPaginationRequired={10}
-          rowsPerPage={10}
-          columns={tColumns}
-          data={tData}
-          currentPage={1}
-          tableClass="min-w-full border border-gray-400 text-sm text-gray-700 font-sans overflow-x-auto"
-          headerClass="bg-blue-600 text-white font-semibold text-left uppercase border-b border-gray-400"
-          rowClass="bg-white hover:bg-blue-100 border-b border-gray-300 transition-colors duration-200"
-          cellClass="py-3 px-4 text-gray-700 whitespace-nowrap"
-          paginationClass="flex justify-center gap-2 mt-4 text-gray-700 font-medium"
-        />
+        {dataLoding ? (
+          <TableSkeleton />
+        ) : (
+          <Table
+            isPaginationRequired={10}
+            rowsPerPage={10}
+            columns={tColumns}
+            data={tData}
+            currentPage={1}
+            tableClass="min-w-full border border-gray-400 text-sm text-gray-700 font-sans overflow-x-auto"
+            headerClass="bg-blue-600 text-white font-semibold text-left uppercase border-b border-gray-400"
+            rowClass="bg-white hover:bg-blue-100 border-b border-gray-300 transition-colors duration-200"
+            cellClass="py-3 px-4 text-gray-700 whitespace-nowrap"
+            paginationClass="flex justify-center gap-2 mt-4 text-gray-700 font-medium"
+          />
+        )}
       </section>
-
     </span>
   );
 };

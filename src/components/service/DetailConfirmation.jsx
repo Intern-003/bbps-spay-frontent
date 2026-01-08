@@ -172,7 +172,6 @@ const DetailConfirmation = () => {
 
   // ---------------- EXECUTE PAYMENT ----------------
   const handlePay = async () => {
-    console.log("🔥 Final Payment Payload:", finalMergedData);
     // return;
     const response = await fetchPayment(finalMergedData);
     

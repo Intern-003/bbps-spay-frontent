@@ -6,8 +6,7 @@ import { useGet } from "../../hooks/useGet";
 import { useServicesContext } from "../../contexts/ServicesAuthContext";
 
 const UpdateSchemeForm = ({ value, refresh }) => {
-  // console.log("value", value);
-
+ 
   const { setIsModelOpen } = useContext(SchemeContext);
   const { forWhat } = useServicesContext();
   const { data: merchantData } = useGet("/get-merchants ");
@@ -17,7 +16,6 @@ const UpdateSchemeForm = ({ value, refresh }) => {
   const { execute } = usePost("/update-scheme");
   const { data: categoryData } = useGet(`/get-billers${forWhat}/${value.name}`);
 
-  // console.log(`URLL===================>/get-billers${forWhat}/${value.name}`);
 
   // Local form states
   const [merchantValue, setMerchantValue] = useState([]);
@@ -44,7 +42,6 @@ const UpdateSchemeForm = ({ value, refresh }) => {
   }, [merchantData, value]);
 
   useEffect(() => {
-    console.log("categoryData ", categoryData);
     setBillerOptionData(categoryData);
   }, [categoryData]);
 
@@ -53,8 +50,7 @@ const UpdateSchemeForm = ({ value, refresh }) => {
       let ids = Array.isArray(value.blr_id)
         ? value.blr_id
         : JSON.parse(value.blr_id);
-      console.log("=====>>>", ids);
-
+    
       const selected = billerData.data
         .filter((b) => ids.includes(b.blr_id))
         .map((b) => ({ value: b.blr_id, label: b.blr_name }));
@@ -72,8 +68,6 @@ const UpdateSchemeForm = ({ value, refresh }) => {
       value: b.blr_id,
       label: b.blr_name,
     })) || [];
-  console.log(" billerOptions ", billerOptions);
-  console.log("billerOptionData", billerOptionData);
 
   // Close modal
   const closeModal = () => setIsModelOpen(false);
@@ -91,8 +85,7 @@ const UpdateSchemeForm = ({ value, refresh }) => {
       blr_id: billerValue.map((b) => b.value),
       status,
     };
-    console.log("THIS IS Body Data of UPDATE SCHEME ", body);
-
+  
     const response = await execute(body);
     if (response) {
       refresh();

@@ -211,8 +211,7 @@ const UpdateUser = () => {
 
     // Debug all form entries
     for (let pair of fd.entries()) {
-      console.log(pair[0], ":", pair[1]);
-    }
+     }
 
     try {
       const res = await executeMember(fd);

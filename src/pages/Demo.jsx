@@ -9,10 +9,7 @@ const Demo = () => {
     const body={data:"DELECTRICITY01"}
     const Featchdata=execute(body);
     
-    console.log(featchData);
-    
-    console.log(data);
-    
+     
   },[]);
   return <>hello demo here</>;
 };

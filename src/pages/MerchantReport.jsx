@@ -7,7 +7,7 @@ import autoTable from "jspdf-autotable";
 import logo from "../images/logo.png";
 import { usePost } from "../hooks/usePost";
 import { useCookies } from "react-cookie";
-
+import TableSkeleton from "../components/TableSkeleton"
 const MerchantReport = () => {
   const [filters, setFilters] = useState({
     fromDate: "",
@@ -187,24 +187,25 @@ const MerchantReport = () => {
 
   /* ---------------- TABLE COLUMNS ---------------- */
   const columns = [
-    "SrNo",
-    "RequestId",
-    "Category",
-    "BillNumber",
-    {
-      label: "Amount",
-      render: (item) => (
-        <span className="font-semibold text-gray-800">
-          {formatCurrency(item.Amount)}
-        </span>
-      ),
-    },
-    {
-      label: "Status",
-      render: (item) => renderStatusLabel(item.Status),
-    },
-    "Date",
-  ];
+  { label: "Sr No", render: (item) => item.SrNo },
+  { label: "Request Id", render: (item) => item.RequestId },
+  { label: "Category", render: (item) => item.Category },
+  { label: "Transaction Id", render: (item) => item.BillNumber },
+  {
+    label: "Amount",
+    render: (item) => (
+      <span className="font-semibold text-gray-800">
+        {formatCurrency(item.Amount/100)}
+      </span>
+    ),
+  },
+  {
+    label: "Status",
+    render: (item) => renderStatusLabel(item.Status),
+  },
+  { label: "Date", render: (item) => item.Date },
+];
+
 
   /* ---------------- RENDER ---------------- */
   return (
@@ -278,13 +279,11 @@ const MerchantReport = () => {
         </h2>
 
         {isLoading ? (
-          <div className="text-center py-10 text-blue-600 animate-pulse">
-            Loading transaction data...
-          </div>
+          <TableSkeleton/>
         ) : (
           <Table
             columns={columns}
-            data={data}
+          data={[...data].reverse()}
             rowsPerPage={rowsPerPage}
             isPaginationRequired
             tableClass="min-w-full border border-gray-400 text-sm"

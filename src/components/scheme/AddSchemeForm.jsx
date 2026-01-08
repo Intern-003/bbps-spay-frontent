@@ -24,7 +24,6 @@ const AddSchemeForm = ({ refresh }) => {
 const {forWhat}=useServicesContext();
 
   const endpoint = useMemo(() => {
-    // console.log(`endpoint  ::=> /get-billers${forWhat}/${category}`);
     return category ? `/get-billers${forWhat}/${category}` : null;
   }, [category]);
 
@@ -32,7 +31,6 @@ const {forWhat}=useServicesContext();
 
   useEffect(() => {
     setBillerData(serviceByCategory);
-    console.log(serviceByCategory);
   }, [serviceByCategory]);
 
   const servicesList = [
@@ -87,7 +85,6 @@ const {forWhat}=useServicesContext();
       merchant_id: merchentValue.map((m) => m.value),
       blr_id: billerValue.map((b) => b.value),
     };
-    console.log(body);
     const response = await execute(body);
 
     if (response?.status === "false") {

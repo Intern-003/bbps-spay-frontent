@@ -5,8 +5,8 @@ import {
   faBuildingColumns,
   faTriangleExclamation,
   faCircleExclamation,
-  faUsers
-  ,faDiagramProject
+  faUsers,
+  faDiagramProject,
 } from "@fortawesome/free-solid-svg-icons";
 import { faFileLines } from "@fortawesome/free-regular-svg-icons";
 import { Link, useLocation } from "react-router-dom";
@@ -30,27 +30,25 @@ export const navItems = [
     roles: ["admin", "user"],
     component: Dashboard,
   },
-{
-  icon: faDiagramProject,
-  label: "Scheme",
-  path: "/scheme",
-  roles: ["admin"],
-  component: Scheme,
-}
-,
- {
-  icon: faUsers,
-  label: "Users",
-  path: "/users",
-  roles: ["admin"],
-  component: Users,
-}
-,
+  {
+    icon: faDiagramProject,
+    label: "Scheme",
+    path: "/scheme",
+    roles: ["admin"],
+    component: Scheme,
+  },
+  {
+    icon: faUsers,
+    label: "Users",
+    path: "/users",
+    roles: ["admin"],
+    component: Users,
+  },
   {
     icon: faBuildingColumns,
     label: "Services",
     path: "/services",
-    roles: ["user","admin"],
+    roles: ["admin", "user"],
     component: ServicePage,
   },
   {
@@ -64,7 +62,7 @@ export const navItems = [
     icon: faMagnifyingGlass,
     label: "Support",
     path: "/support",
-    roles: ["user","admin"],
+    roles: ["user", "admin"],
     component: Support,
   },
   {
@@ -78,7 +76,7 @@ export const navItems = [
     icon: faCircleExclamation,
     label: "Check Complaint",
     path: "/checkcomplaint",
-    roles: ["user","admin"],
+    roles: ["user", "admin"],
     component: CheckTransactionComplaint,
   },
   // {

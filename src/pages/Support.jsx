@@ -1,62 +1,34 @@
 import React, { useEffect, useState } from "react";
 import { usePost } from "../hooks/usePost";
 
+const inputClass =
+  "p-3 rounded-lg border border-gray-300 outline-none transition " +
+  "focus:ring-2 focus:ring-indigo-400 " +
+  "disabled:bg-gray-100 disabled:text-gray-400 " +
+  "disabled:cursor-not-allowed disabled:border-gray-200 disabled:focus:ring-0";
+
 const Support = () => {
-  // Input State
+  // Inputs
   const [requestId, setRequestId] = useState("");
   const [mobile, setMobile] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
   const [isDisable, setIsDisable] = useState({
+    requestId: false,
     mobile: false,
     startDate: false,
     endDate: false,
-    requestId: false,
   });
 
-  // RESPONSE IS ALWAYS ARRAY
+  // API
+  const { loading, execute } = usePost("/bbps/get-txn-status");
+
+  // Response
   const [response, setResponse] = useState([]);
   const [resError, setResError] = useState(null);
-  // API Hook
-  const { error, loading, execute } = usePost(`/bbps/get-txn-status`);
 
-  const handleSubmit = async () => {
-    let body;
-
-    if(!requestId && !mobile ){
-      setResError("Set request Id or Mobile No")
-    }
-    if (!isDisable.requestId) {
-      body = {
-        txnRefID: requestId,
-      };
-    } else {
-      body = {
-        mobile_no: mobile,
-        fromDate: startDate,
-        toDate: endDate || new Date().toISOString().split("T")[0],
-      };
-    }
-
-    try {
-      const result = await execute(body);
-
-      if (result?.responses[requestId || mobile].errorInfo) {
-        setResError(
-          result?.responses[requestId || mobile].errorInfo.error[0].errorMessage
-        );
-        return;
-        // console.log("level 44",);
-      }
-      const txn = result?.responses?.[requestId || mobile]?.txnList || [];
-      setResponse(txn);
-    } catch (error) {
-      console.log("errror", error);
-      setResponse([]);
-    }
-  };
-
+  // Enable / Disable logic
   useEffect(() => {
     const hasRequestId = requestId.trim().length > 0;
     const hasOtherFields =
@@ -72,9 +44,49 @@ const Support = () => {
     });
   }, [requestId, mobile, startDate, endDate]);
 
-  useEffect(() => {
-    console.log("ERRORRR", error);
-  }, [error]);
+  const handleSubmit = async () => {
+    setResError(null);
+    setResponse([]);
+
+    // 🔒 Validation
+    if (!requestId && !mobile) {
+      setResError("Please enter Request ID or Mobile Number");
+      return;
+    }
+
+    let body;
+
+    if (requestId) {
+      body = { txnRefID: requestId };
+    } else {
+      body = {
+        mobile_no: mobile,
+        fromDate: startDate,
+        toDate: endDate || new Date().toISOString().split("T")[0],
+      };
+    }
+
+    try {
+      const result = await execute(body);
+
+      const key = requestId || mobile;
+      const apiRes = result?.responses?.[key];
+
+      if (!apiRes) {
+        setResError("No transaction data found");
+        return;
+      }
+
+      if (apiRes?.errorInfo) {
+        setResError(apiRes.errorInfo.error?.[0]?.errorMessage);
+        return;
+      }
+
+      setResponse(apiRes.txnList || []);
+    } catch {
+      setResError("Something went wrong. Please try again.");
+    }
+  };
 
   const clearField = () => {
     setRequestId("");
@@ -82,125 +94,119 @@ const Support = () => {
     setStartDate("");
     setEndDate("");
     setResponse([]);
+    setResError(null);
   };
 
-useEffect(() => {
-  if (!resError) return;
-  alert(resError);
-  setResError(null)
-}, [resError]);
-
   return (
-    <div className="p-6 flex flex-col gap-8 bg-gradient-to-br from-gray-50 via-indigo-50 to-purple-50 min-h-screen">
-      {/* Input Section */}
-      <div className="w-full lg:w-1/2 bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-100 mx-auto">
-        <h2 className="text-lg font-semibold text-gray-700 mb-5">
-          Review Transaction Activity
-        </h2>
+    <div className="p-6 bg-gradient-to-br from-gray-50 via-indigo-50 to-purple-50 min-h-screen">
+      {/* Form */}
+      <div className="flex items-center justify-center p-4">
+        <div className="w-full lg:w-1/2 bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-700 mb-5">
+            Review Transaction Activity
+          </h2>
 
-        <div className="flex flex-col gap-4">
-          <input
-            type="text"
-            disabled={isDisable.requestId}
-            placeholder="Transaction Reference Id / Request Id"
-            className="p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 outline-none"
-            value={requestId}
-            onChange={(e) => setRequestId(e.target.value)}
-          />
-
-          <div className="relative text-center text-gray-500 font-semibold">
-            <span className="bg-white px-2">OR</span>
-          </div>
-
-          <input
-            type="text"
-            disabled={isDisable.mobile}
-            placeholder="Mobile Number"
-            className="p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 outline-none"
-            value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
-          />
-
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-4">
             <input
-              type="date"
-              disabled={isDisable.startDate}
-              className="p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 outline-none w-full"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              type="text"
+              disabled={isDisable.requestId}
+              placeholder="Transaction Reference Id / Request Id"
+              className={inputClass}
+              value={requestId}
+              onChange={(e) => setRequestId(e.target.value)}
             />
+
+            <div className="relative text-center text-gray-500 font-semibold">
+              <span className="bg-white px-2">OR</span>
+            </div>
+
             <input
-              type="date"
-              disabled={isDisable.endDate}
-              className="p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 outline-none w-full"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              type="text"
+              disabled={isDisable.mobile}
+              placeholder="Mobile Number"
+              className={inputClass}
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
             />
+
+            <div className="flex gap-3">
+              <input
+                type="date"
+                disabled={isDisable.startDate}
+                className={`${inputClass} w-full`}
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+
+              <input
+                type="date"
+                disabled={isDisable.endDate}
+                className={`${inputClass} w-full`}
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="bg-gradient-to-r from-indigo-600 to-teal-500 text-white px-6 py-2 rounded-lg shadow-md 
+                         hover:opacity-90 transition
+                         disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Checking..." : "Check Status"}
+            </button>
+
+            <button
+              onClick={clearField}
+              className="bg-gray-600 text-white px-6 py-2 rounded-lg shadow-md 
+                         hover:bg-gray-700 transition"
+            >
+              Clear
+            </button>
+
+            {resError && (
+              <p className="text-sm text-red-600 font-medium">{resError}</p>
+            )}
           </div>
-
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="bg-gradient-to-r from-indigo-600 to-teal-500 text-white px-6 py-2 rounded-lg shadow-md hover:opacity-90 transition disabled:opacity-50"
-          >
-            {loading ? "Checking..." : "Check Status"}
-          </button>
-
-          <button
-            onClick={clearField}
-            className="bg-gray-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-gray-700 transition"
-          >
-            Clear
-          </button>
         </div>
       </div>
-      {/* {resError && (
-        <div className="mt-3 text-sm text-red-600 font-medium">{resError}</div>
-      )} */}
 
-      {/* Transaction Response */}
+      {/* Response */}
       {response.length > 0 && (
-        <div className="space-y-6">
+        <div className="space-y-6 mt-10">
           {response.map((res, index) => (
             <div
               key={res.payRequestId || index}
               className="bg-white/90 p-6 rounded-2xl shadow-xl border border-gray-200 backdrop-blur-lg w-full lg:w-2/3 mx-auto"
             >
-              <h3 className="text-xl font-bold mb-5 text-gray-800 flex items-center gap-2">
-                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+              <h3 className="text-xl font-bold mb-5 text-gray-800">
                 Transaction Status
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
-                  { label: "Agent ID", value: res.agentId },
-                  { label: "Amount", value: res.amount },
-                  { label: "Biller ID", value: res.billerId },
-                  { label: "Mobile", value: res.mobile },
-                  { label: "Pay Request ID", value: res.payRequestId },
-                  {
-                    label: "Approval Ref Number",
-                    value: res.approvalRefNumber,
-                  },
-                  { label: "Transaction Date", value: res.txnDate },
-                  {
-                    label: "Customer Name",
-                    value: res.respCustomerName,
-                  },
-                ].map((item, i) => (
+                  ["Agent ID", res.agentId],
+                  ["Amount", res.amount],
+                  ["Biller ID", res.billerId],
+                  ["Mobile", res.mobile],
+                  ["Pay Request ID", res.payRequestId],
+                  ["Approval Ref Number", res.approvalRefNumber],
+                  ["Transaction Date", res.txnDate],
+                  ["Customer Name", res.respCustomerName],
+                ].map(([label, value], i) => (
                   <div
                     key={i}
-                    className="p-4 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-md transition"
+                    className="p-4 bg-gray-50 rounded-xl border border-gray-200"
                   >
-                    <b className="text-gray-600">{item.label}</b>
+                    <b className="text-gray-600">{label}</b>
                     <p className="text-gray-800 font-medium break-all">
-                      {item.value || "—"}
+                      {value || "—"}
                     </p>
                   </div>
                 ))}
 
-                {/* Transaction Status */}
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-md transition">
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                   <b className="text-gray-600">Transaction Status</b>
                   <p
                     className={`font-semibold ${

@@ -95,12 +95,10 @@ const handleSubmit = async (e) => {
   };
 
   try {
-    console.log("Sending payload:", payload);
-
+  
     const response = await fetchPayment(payload);  // ✅ using your hook
 
-    console.log("Complaint API Response:", response); // log API output
-
+  
     toast.success("Complaint submitted successfully!");
   } catch (error) {
     console.error("API Error:", error);

@@ -1,3 +1,6 @@
+// CC0125319441353
+// CC0125318174868
+
 import React, { useState } from "react";
 import Table from "../components/Table";
 import { usePost } from "../hooks/usePost";
@@ -8,7 +11,7 @@ const CheckTransactionComplaint = () => {
   const [complaintId, setComplaintId] = useState("");
   const [complaintResponse, setComplaintResponse] = useState(null);
 
-  const { data, error, loading, execute } = usePost("/bbps/complaint-status/json");
+  const { error, loading, execute } = usePost("/bbps/complaint-status/json");
 
   const columns = [
     "Complaint ID",
@@ -24,6 +27,8 @@ const CheckTransactionComplaint = () => {
       return;
     }
 
+    setComplaintResponse(null);
+
     const body = {
       complaintType,
       complaintId,
@@ -32,54 +37,63 @@ const CheckTransactionComplaint = () => {
     const res = await execute(body);
 
     if (res) {
-      // map API response to table-friendly format
       setComplaintResponse({
-        id: res.complaintId || "N/A",
-        status: res.complaintStatus || "N/A",
-        remarks: res.complaintRemarks || "N/A",
-        complaintAssigned: res.complaintAssigned || "N/A",
-        complaintResponseReason: res.complaintResponseReason || "N/A",
+        id: res.complaintId ?? "N/A",
+        status: res.complaintStatus ?? "N/A",
+        remarks: res.complaintRemarks ?? "N/A",
+        complaintAssigned: res.complaintAssigned ?? "N/A",
+        complaintResponseReason: res.complaintResponseReason ?? "N/A",
       });
     }
   };
 
-  // prepare table data
   const tableData = complaintResponse
     ? [
         {
           "Complaint ID": complaintResponse.id,
           "Complaint Status": complaintResponse.status,
-          "Remarks": complaintResponse.remarks,
+          Remarks: complaintResponse.remarks,
           "Complaint Assigned": complaintResponse.complaintAssigned,
-          "Complaint Response Reason": complaintResponse.complaintResponseReason,
+          "Complaint Response Reason":
+            complaintResponse.complaintResponseReason,
         },
       ]
     : [];
 
   return (
-    <div className="flex flex-col items-center p-6 bg-gray-50 min-h-screen">
-      <div className="relative bg-white shadow-md rounded-lg p-6 w-full max-w-4xl border border-gray-200">
+    <div className=" flex flex-col items-center px-4 sm:px-6 lg:px-8 py-6 bg-gray-50 ">
+      <div
+        className="
+      relative bg-white shadow-md rounded-lg border border-gray-200
+      w-full
+      max-w-full
+      sm:max-w-xl
+      md:max-w-2xl
+      lg:max-w-[60%]
+      xl:max-w-5xl
+      p-4 sm:p-6
+    "
+      >
         {/* Logo */}
         <img
           src="https://upload.wikimedia.org/wikipedia/en/thumb/e/e8/Bharat_Connect_Primary_Logo_SVG.svg/1280px-Bharat_Connect_Primary_Logo_SVG.png"
           alt="Bharat Connect Logo"
-          className="absolute top-4 right-4 w-28 h-auto"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 w-20 sm:w-24 md:w-28 h-auto"
         />
 
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">
           Check Complaint Status – Tracking
         </h1>
 
         {/* Complaint Type */}
         <div className="mb-4">
-          <label htmlFor="complaintType" className="block text-gray-700 font-medium mb-2">
+          <label className="block text-gray-700 font-medium mb-2">
             Complaint Type
           </label>
           <select
-            id="complaintType"
             value={complaintType}
             onChange={(e) => setComplaintType(e.target.value)}
-            className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 outline-none"
           >
             <option value="">Select Type</option>
             <option value="Transaction">Transaction</option>
@@ -89,38 +103,50 @@ const CheckTransactionComplaint = () => {
 
         {/* Complaint ID */}
         <div className="mb-4">
-          <label htmlFor="complaintId" className="block text-gray-700 font-medium mb-2">
+          <label className="block text-gray-700 font-medium mb-2">
             Enter Complaint ID
           </label>
           <input
-            id="complaintId"
             type="text"
             value={complaintId}
             onChange={(e) => setComplaintId(e.target.value)}
             placeholder="Enter your Complaint ID"
-            className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
 
-        {/* Check Button */}
+        {/* Button */}
         <button
           onClick={handleCheckStatus}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition-colors"
+          disabled={loading}
+          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium py-2 px-6 rounded-md transition"
         >
-          Check Status
+          {loading ? "Checking..." : "Check Status"}
         </button>
 
         <hr className="my-6" />
 
         {/* Table */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">Complaint Status</h3>
-          {loading ? (
-            <TableSkeleton rows={1} columns={5} />
-          ) : (
-            <Table columns={columns} data={tableData} />
-          )}
-        </div>
+        {loading && <TableSkeleton rows={1} columns={5} />}
+
+        {error && (
+          <p className="text-red-600 font-medium text-sm">
+            Failed to fetch complaint status.
+          </p>
+        )}
+
+        {complaintResponse && !loading && (
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">
+              Complaint Status
+            </h3>
+
+            {/* Horizontal scroll for small devices */}
+            <div className="overflow-x-auto">
+              <Table columns={columns} data={tableData} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

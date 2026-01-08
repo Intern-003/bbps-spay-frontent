@@ -29,8 +29,7 @@ export function usePost(endpoint) {
             headers: { "Content-Type": "application/json" },
           }
         );
-        console.log(" here is response :", response);
-        return response.data;
+         return response.data;
       }
 
       if (
@@ -41,9 +40,7 @@ export function usePost(endpoint) {
         endpoint === "/register-new-merchant" ||
         endpoint === "/self-merchant-onboard-process"
       ) {
-        console.log(`${BASE_URL}${endpoint}`);
-        // console.log(body);
-        const isFormData =
+         const isFormData =
           typeof FormData !== "undefined" && body instanceof FormData;
         response = await axios.post(`${BASE_URL}${endpoint}`, body, {
           withCredentials: true,
@@ -51,7 +48,6 @@ export function usePost(endpoint) {
             ...(isFormData ? {} : { "Content-Type": "application/json" }),
           },
         });
-        console.log("line 51", response);
         return response.data;
       }
 
@@ -62,23 +58,18 @@ export function usePost(endpoint) {
         endpoint === "/bbps/plan-pull-test/json" ||
         endpoint === "/bbps/biller-info-test/json"
       ) {
-        console.log(body);
-
+     
         response = await axios.post(`${BASE_URL}${endpoint}`, body, {
           headers: {
             "Content-Type": "text/plain",
             Authorization: `Bearer ${cookie.token.slice(4)}`,
           },
         });
-        console.log(response);
         return response;
       }
 
       if (endpoint === "/delete-scheme") {
-        console.log("ID====>", body);
-        console.log(`Bearer  token${cookie.token.slice(4)}`);
-        console.log(`URL  ${BASE_URL}${endpoint}/${body}`);
-
+      
         response = await axios.post(
           `${BASE_URL}${endpoint}/${body}`,
           {},
@@ -97,22 +88,18 @@ export function usePost(endpoint) {
       const isFormData =
         typeof FormData !== "undefined" && body instanceof FormData;
 
-      // console.log("Line 77", isFormData);
-      // console.log("Line 78", body);
-
+      
       response = await axios.post(`${BASE_URL}${endpoint}`, body, {
         headers: {
           Authorization: `Bearer ${cookie.token.slice(4)}`,
           ...(isFormData ? {} : { "Content-Type": "application/json" }), // ❗ Correct logic
         },
       });
-      console.log("Line 88", response.data);
       setData(response.data);
       return response.data;
     } catch (err) {
       const errData = err.response?.data || "Something went wrong...";
       setError(errData);
-      console.log("this is error from hook jgfjg", err);
       // throw err;
     } finally {
       setLoading(false);

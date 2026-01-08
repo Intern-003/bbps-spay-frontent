@@ -45,10 +45,7 @@ const DetailInput = () => {
      LOAD selectedBiller PARAMS
   ------------------------------------------------------- */
   useEffect(() => {
-    // console.log("Error this is :",error);
-
-    if (error?.result?.message) {
-      // console.log("Direct error",error?.result?.message);
+     if (error?.result?.message) {
       setResError(error.result.message);
       return;
     }
@@ -56,7 +53,6 @@ const DetailInput = () => {
     if (error?.result?.errors) {
       let a = error?.result?.errors;
       let msg = Object.values(a)[0][0];
-      console.log(msg);
       setResError(msg);
       return;
     }
@@ -64,7 +60,6 @@ const DetailInput = () => {
       setResError(
         error?.result?.decryptedResponse.errorInfo.error[0].errorMessage
       ); // sync UI error
-      // console.log(
       // "line 45",
       // error?.result?.decryptedResponse.errorInfo.error[0].errorMessage
       // );
@@ -72,7 +67,6 @@ const DetailInput = () => {
     }
 
     if (error?.result?.decryptedResponse?.complianceReason) {
-      // console.log(error?.result.decryptedResponse.complianceReason);
       setResError(error?.result.decryptedResponse.complianceReason);
       return;
     }
@@ -113,8 +107,7 @@ const DetailInput = () => {
   const handleCancel = (close) => {
     window.location.reload(true);
     close();
-    console.log("Cancle Page");
-  };
+   };
   /* -------------------------------------------------------
      SUBMIT REQUEST
   ------------------------------------------------------- */
@@ -134,10 +127,8 @@ const DetailInput = () => {
     };
 
     // 3️⃣ Build API request body
-    // console.log("Line 88", typeof billerFetchRequiremet);
-    const currentBillerFetchRequiremet = billerFetchRequiremet;
-    // console.log(currentBillerFetchRequiremet);
-
+     const currentBillerFetchRequiremet = billerFetchRequiremet;
+ 
     // if()
     const requestBody = {
       data: {
@@ -147,9 +138,7 @@ const DetailInput = () => {
       },
     };
 
-    // console.log("FINAL REQUEST BODY →", requestBody);
-    // console.log("Mandetory Data",mandatoryData);
-
+   
     // 4️⃣ API CALL
 
     // callAPI()
@@ -158,8 +147,7 @@ const DetailInput = () => {
     const response = await fetchResponse(requestBody.data);
 
     if (!response) {
-      console.log("UNDEFINED ::::::;-----", response);
-      return;
+       return;
     }
     // const response = await fetchResponse(requestBody.data);
     // checkError();
@@ -167,31 +155,24 @@ const DetailInput = () => {
 
     // Check if it's an error shape
     if (res?.status === false && res?.message) {
-      console.log("API Error:", res.message);
       setResError(res.message);
       return; // prevent closing modal
     }
 
     // Otherwise, success shape
     const decrypted = res?.decryptedResponse;
-    console.log("Line 12999999999999999", decrypted);
-
+   
     if (!decrypted || decrypted.responseCode !== "000") {
-      console.log("API Error:", decrypted || "Unknown error");
       setResError(decrypted?.responseReason || "Unknown error");
       return;
     }
 
     // Success → proceed
 
-    console.log("out");
-    console.log(response?.result);
-
-    close();
+     close();
 
     // 5️⃣ Send next modal data
     setTimeout(() => {
-      // console.log("billerFetchRequiremet: " ,billerFetchRequiremet);
       openModal("finalData", {
         data: response?.result?.decryptedResponse,
         custData: billerFetchRequiremet ? mandatoryData : {},

@@ -6,7 +6,7 @@ export const BillerSearchForm = ({ selectedBiller }) => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log(`Biller: ${selectedBiller}, Account: ${contractAccount}`);
+
     // 🔹 Add your API logic here
   };
 

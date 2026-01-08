@@ -140,8 +140,7 @@ const RegisterUser = () => {
       try {
         const body = { name, mobile_no: phone, email, password };
         const res = await regUser(body);
-        console.log("check 144", res?.registered);
-
+      
         if (res?.registered) {
           // navigate();
           navigate("/register-organization", {

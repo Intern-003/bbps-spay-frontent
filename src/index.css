@@ -95,3 +95,28 @@
 }
 
 
+/* Width */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f5f9; /* slate-100 */
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #caced1; /* indigo-500 */
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #a5a7a8; /* indigo-600 */
+}
+/* * {
+  scrollbar-width: thin;
+  scrollbar-color: #4aa4e0 #f1f5f9;
+} */

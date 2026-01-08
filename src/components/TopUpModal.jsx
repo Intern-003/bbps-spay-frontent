@@ -90,10 +90,8 @@ export const TopUpModal = ({ data, isOpen, onClose,refresh }) => {
       amount,
       remark,
     };
-const response=await topUp(body);;
-    console.log("Data submitted from modal:", body);
-    if (response){
-        console.log(response);  
+const response=await topUp(body);
+    if (response){ 
         refresh(); 
         closeModal();
     } 

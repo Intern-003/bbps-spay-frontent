@@ -64,9 +64,7 @@ const Scheme = () => {
   //  Build table rows when response updates
   useEffect(() => {
     if (response?.data) {
-      console.log("THis is ajfafjkfjlksajdfjlk", response);
-
-      const withActionButton = response.data.map((d, index) => {
+     const withActionButton = response.data.map((d, index) => {
         const {
           // srno:`${index+1}`,
           created_at,
@@ -83,8 +81,7 @@ const Scheme = () => {
 
         let userInfo = "No User was added";
         if (user_names_json) {
-          console.log("enter level one");
-
+        
           try {
             let a = JSON.parse(user_names_json);
             userInfo = a.map((u, index) => u);
@@ -97,8 +94,7 @@ const Scheme = () => {
         if (blr_names_json) {
           try {
              billerInfo = JSON.parse(blr_names_json);
-            // billerInfo = a.map((b) => b);
-            // console.log(billerInfo);
+         
           } catch (err) {
             console.error(err);
           }

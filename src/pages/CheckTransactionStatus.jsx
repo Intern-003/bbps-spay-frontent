@@ -44,12 +44,10 @@ const CheckTransactionStatus = () => {
           result?.responses[requestId || mobile].errorInfo.error[0].errorMessage
         );
         return;
-        // console.log("level 44",);
       }
       const txn = result?.responses?.[requestId || mobile]?.txnList || [];
       setResponse(txn);
     } catch (error) {
-      console.log("errror", error);
       setResponse([]);
     }
   };
@@ -69,9 +67,7 @@ const CheckTransactionStatus = () => {
     });
   }, [requestId, mobile, startDate, endDate]);
 
-  useEffect(() => {
-    console.log("ERRORRR", error);
-  }, [error]);
+  useEffect(() => {}, [error]);
 
   const clearField = () => {
     setRequestId("");
@@ -81,14 +77,14 @@ const CheckTransactionStatus = () => {
     setResponse([]);
   };
 
-useEffect(() => {
-  if (!resError) return;
-  alert(resError);
-  setResError(null)
-}, [resError]);
+  useEffect(() => {
+    if (!resError) return;
+    alert(resError);
+    setResError(null);
+  }, [resError]);
 
   return (
-    <div className="p-6 flex flex-col gap-8 bg-gradient-to-br from-gray-50 via-indigo-50 to-purple-50 min-h-screen">
+    <div className="p-6 flex  flex-col gap-8 bg-gradient-to-br from-gray-50 via-indigo-50 to-purple-50 container">
       {/* Input Section */}
       <div className="w-full lg:w-1/2 bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-100 mx-auto">
         <h2 className="text-lg font-semibold text-gray-700 mb-5">

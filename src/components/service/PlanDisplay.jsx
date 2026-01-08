@@ -24,8 +24,7 @@ const PlanDisplay = () => {
     const fetchPlans = async () => {
       if (!selectedBiller.billerId) return;
 
-      console.log("Fetching plans...");
-
+    
       const res = await execute(selectedBiller.billerId);
 
       setResponse(res);
@@ -60,8 +59,7 @@ const PlanDisplay = () => {
 const handleCancel=(close)=>{
     window.location.reload(true);
     close();
-    console.log("Cancle Page");
-  }
+   }
   const handleNext = (close) => {
     if (!selectedPlan) {
       alert("Please select a plan first.");

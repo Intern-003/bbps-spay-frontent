@@ -142,9 +142,7 @@ const OrganizationRegristrationPage = () => {
     fd.append("scheme_id", "");
 
 
-    //    fd.forEach((value, key) => {
-    //   console.log(key, value);
-    // });
+
 
     const res = await executeMember(fd);
     if (res?.success) {

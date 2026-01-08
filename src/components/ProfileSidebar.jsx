@@ -44,7 +44,6 @@ export const ProfileSidebar = ({ isOpen, onClose }) => {
     };
     const accountDetail = await execute(body);
     if (accountDetail) {
-      console.log("Account Details", accountDetail.data.currentBalance);
       setBalance(accountDetail.data.currentBalance);
     }
   };
@@ -57,10 +56,8 @@ export const ProfileSidebar = ({ isOpen, onClose }) => {
     removeCookie("token", { path: "/" });
     removeCookie("role", { path: "/" });
     removeCookie("user", { path: "/" });
-    console.log("Logged out, cookies removed");
     navigate("/");
   };
-  // console.log("cookies.role :",cookies.role);
 
  return (
   <>

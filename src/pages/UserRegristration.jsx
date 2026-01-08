@@ -31,8 +31,7 @@ const UserRegistration = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
   const submitHandler = () => {
-    console.log(formData);
-    navigate("/user-instruction", {
+     navigate("/user-instruction", {
       state: { userData: formData },
     });
   };

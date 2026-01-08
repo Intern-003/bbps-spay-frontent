@@ -30,11 +30,10 @@ const SelectServiceBiller = () => {
   const { data: billerResponse, execute: fetchBillerInfo } = usePost(
     `/bbps/biller-info${testEnv}/json`
   );
-const handleCancel=(close)=>{
+  const handleCancel = (close) => {
     window.location.reload(true);
     close();
-    console.log("Cancle Page");
-  }
+  };
   useEffect(() => {
     if (apiLoading) {
       setLoading(true);
@@ -88,10 +87,18 @@ const handleCancel=(close)=>{
 
   //  Convert API data → react-select options
   const billerOptions = useMemo(() => {
-    return serviceList.map((item) => ({
-      value: item.blr_id,
-      label: item.blr_name,
-    }));
+    return serviceList.map((item) => {
+      if (item.blr_id === "NOVI00000NAT8C") {
+        return {
+          value: item.blr_id,
+          label: "Jio Hotstar Quaterly",
+        };
+      }
+      return {
+        value: item.blr_id,
+        label: item.blr_name,
+      };
+    });
   }, [serviceList]);
 
   return (
@@ -141,8 +148,8 @@ const handleCancel=(close)=>{
             Next
           </button>
 
-        <button
-            onClick={()=>handleCancel(close)}
+          <button
+            onClick={() => handleCancel(close)}
             className="px-3 py-1.5 bg-gray-300 rounded hover:bg-gray-400 text-sm"
           >
             Cancel

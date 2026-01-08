@@ -80,8 +80,7 @@ const UserInstruction = () => {
   };
 
   const handleSubmit = () => {
-    console.log("Video Submitted:", videoFile);
-
+  
     alert(
       "Your Data has been reserved your account will be activated with in 24-48 Hours"
     );

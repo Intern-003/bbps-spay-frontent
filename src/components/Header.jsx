@@ -41,7 +41,7 @@ export const Header = ({isMobile=false,setIsMobileSidebarOpen}) => {
               <FontAwesomeIcon icon={faWallet} />
             </div>
             <span className="text-gray-700 font-bold">₹ 5,000/-</span> */}
-            <NotificationBell />
+            {/* <NotificationBell /> */}
 
 			<button
 			onClick={() => setIsSidebarOpen(true)}
