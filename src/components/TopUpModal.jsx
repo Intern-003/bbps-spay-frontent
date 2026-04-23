@@ -90,6 +90,7 @@ export const TopUpModal = ({ data, isOpen, onClose,refresh }) => {
       amount,
       remark,
     };
+    console.log("BODY:", body);
 const response=await topUp(body);
     if (response){ 
         refresh(); 

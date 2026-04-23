@@ -16,7 +16,8 @@ const Merchent = () => {
   const userId = cookie.user.id;
 
   const { loading: dataLoding, data: merchantsData } = useGet(
-    `/reports/user/${userId}`
+    // `/reports/user/${userId}`
+    `/bbps/user-bill-payments/json/${userId}`
   );
 
   const handelServiceClick = () => {
@@ -69,6 +70,13 @@ const Merchent = () => {
   };
   // const dateTime = "2025-12-02 10:57:27";
 
+  const mapTxnStatus = (code) => {
+    if (code === "000") return "Successful";
+    if (code === "205" || code === "001") return "Failed";
+    if (code === "102") return "Pending";
+    return "Initiated";
+  };
+
   const tData =
     merchantsData?.data?.map((item) => ({
       id: item.id,
@@ -77,7 +85,7 @@ const Merchent = () => {
       category: item.biller_category,
       mobile_no: item.mobile,
       respAmount: item.amount,
-      txnStatus: item.status,
+       txnStatus: mapTxnStatus(item.txnStatus),
       responseReason: item.description,
       payout_opening_balance: item.payout_opening_balance,
       payout_closing_balance: item.payout_closing_balance,
@@ -95,7 +103,9 @@ const Merchent = () => {
     {
       label: "Status",
       key: "txnStatus",
-      render: (item) => renderStatusLabel(item.txnStatus),
+       render: (item) =>
+    renderStatusLabel(mapTxnStatus(item.txnStatus)),
+
     },
 
     {

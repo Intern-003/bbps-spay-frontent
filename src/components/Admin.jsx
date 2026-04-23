@@ -8,7 +8,7 @@ import { useGet } from "../hooks/useGet";
 const Admin = () => {
   /* ---------------------- API Call ---------------------- */
   const { data: merchantsData, loading } = useGet("/admin/dashboard-data");
-
+// console.log("data : ",merchantsData);
   const [topUsers, setTopUsers] = useState([]);
   const [latestTransactions, setLatestTransactions] = useState([]);
   const [monthlyEarnings, setMonthlyEarnings] = useState([]);
@@ -115,8 +115,8 @@ const dateFormat = (dateTime) => {
       respAmount: item.amount,
       txnStatus: item.status,
       responseReason: item.description,
-      Date: item.created_at,
-      "updated date": item.updated_at,
+      created_at: dateFormat(item.created_at),
+      updated_at: dateFormat(item.updated_at),
     })) || [];
 
   /* ---------------------- Chart Data ---------------------- */

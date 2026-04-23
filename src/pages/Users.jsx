@@ -207,11 +207,16 @@ const PermissionsModal = ({ userId, onClose, refreshUsers }) => {
   );
 };
 
+
+
 /* ------------------ MAIN USERS COMPONENT ------------------ */
 
 const Users = () => {
   const navigate = useNavigate();
   const { getData, deleteData } = useAuth();
+
+  const [openTopUpModal, setOpenTopUpModal] = useState(false);
+const [topUpModalData, setTopUpModalData] = useState(null);
 
   const [isAlert, setIsAlert] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
@@ -301,6 +306,7 @@ const handleToggleStatus = async (item) => {
       top_up: (
         <button
           onClick={() => {
+            //  console.log("TopUp Clicked", item.id);
             setOpenTopUpModal(true);
             setTopUpModalData({ merchantId: item.id });
           }}
@@ -480,6 +486,16 @@ const handleToggleStatus = async (item) => {
           refreshUsers={refresh}
         />
       )}
+
+
+      {openTopUpModal && (
+  <TopUpModal
+    data={topUpModalData}
+    onClose={() => setOpenTopUpModal(false)}
+        isOpen={openTopUpModal}   // ✅ YE ADD KARO
+    refresh={refresh}
+  />
+)}
     </>
   );
 };
